@@ -31,13 +31,13 @@ namespace PokemonReviewer.Controllers
         [HttpGet("{pokemonId}")]
         [ProducesResponseType(200, Type=typeof(Pokemon))]
         [ProducesResponseType(400)]
-        public IActionResult GetPokemon(int pokemonId)
+        public IActionResult GetPokemonById(int pokemonId)
         {
             if(!_pokemonRepository.PokemonExists(pokemonId))
             {
                 return NotFound();
             }
-            var pokemon = _mapper.Map<PokemonDto>(_pokemonRepository.GetPokemon(pokemonId));
+            var pokemon = _mapper.Map<PokemonDto>(_pokemonRepository.GetPokemonById(pokemonId));
             if(!ModelState.IsValid)
             {
                 return BadRequest(ModelState);

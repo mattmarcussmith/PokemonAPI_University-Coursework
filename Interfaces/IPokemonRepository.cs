@@ -5,11 +5,9 @@ namespace PokemonReviewer.Interfaces
     public interface IPokemonRepository
     {
         ICollection<Pokemon> GetPokemons();
-        Pokemon GetPokemon(int id);
-        Pokemon GetPokemon(string name);
+        Pokemon GetPokemonById(int id);
+        Pokemon GetPokemonByName(string name);
         decimal GetPokemonRating(int rating);
         bool PokemonExists(int id);
-
-
     }
 }
