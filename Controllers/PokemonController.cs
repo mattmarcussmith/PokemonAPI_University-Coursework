@@ -61,8 +61,6 @@ namespace PokemonReviewer.Controllers
             }
             return Ok(rating);
 
-
-            
         }
 
     }

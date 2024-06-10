@@ -7,9 +7,6 @@ namespace PokemonReviewer.Data
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
-
-
-
         }
 
         public DbSet<Pokemon> Pokemons { get; set; }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PokemonReviewer.Dto;
 using PokemonReviewer.Interfaces;
 using PokemonReviewer.Models;
-using PokemonReviewer.Repository;
+
 
 
 namespace PokemonReviewer.Controllers
@@ -49,13 +49,11 @@ namespace PokemonReviewer.Controllers
                 return BadRequest();
             }
             return Ok(category);
-
         }
 
-        [HttpGet("pokemon/{categoryId}")]
+        [HttpGet("{categoryId}/pokemon")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
         [ProducesResponseType(400)]
-
         public IActionResult GetPokemonsByCategoryId(int categoryId)
         {
             var pokemons = _mapper.Map

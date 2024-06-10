@@ -9,7 +9,7 @@ namespace PokemonReviewer.Repository
         private readonly DataContext _dataContext;
         public PokemonRepository(DataContext dataContext)
         {
-            _dataContext = dataContext;
+          _dataContext = dataContext;
 
         }
         public ICollection<Pokemon> GetPokemons()
@@ -39,6 +39,7 @@ namespace PokemonReviewer.Repository
                                             .Where(r => r.Pokemon.Id == pokemonId)
                                             .Select(r => (decimal?)r.Rating)
                                             .Average() ?? 0;
+           
             return pokemonRating;
         }
          
