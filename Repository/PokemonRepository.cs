@@ -12,6 +12,8 @@ namespace PokemonReviewer.Repository
           _dataContext = dataContext;
 
         }
+
+        // Get database calls
         public ICollection<Pokemon> GetPokemons()
         {
             return _dataContext.Pokemons
@@ -47,5 +49,51 @@ namespace PokemonReviewer.Repository
         {
             return _dataContext.Pokemons.Any(p => p.Id == pokemonId);
         }
+
+        // Create database calls
+        public bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            // Updating the PokemonOwner and PokemonCategory tables
+            var pokemonOwnerEntity = _dataContext.Owners.Where(o => o.Id == ownerId).FirstOrDefault();
+            var pokemonCategoryEntity = _dataContext.Categories.Where(c => c.Id == categoryId).FirstOrDefault();
+
+
+            var pokemonOwner = new PokemonOwner()
+            {
+                Owner = pokemonOwnerEntity,
+                Pokemon = pokemon,
+            };
+            _dataContext.Add(pokemonOwner);
+
+            var pokemonCategory = new PokemonCategory()
+            {
+                Category = pokemonCategoryEntity,
+                Pokemon = pokemon,
+            };
+            _dataContext.Add(pokemonCategory);
+            _dataContext.Add(pokemon);
+
+            return Save();
+
+
+        }
+
+        public bool UpdatePokemonById(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            _dataContext.Update(pokemon);
+            return Save();
+        }
+
+        public bool DeletePokemonById(Pokemon pokemon)
+        {
+            _dataContext.Remove(pokemon);
+            return Save();
+        }
+        public bool Save()
+        {
+            return _dataContext.SaveChanges() > 0 ? true : false;
+        }
+
+      
     }
 }

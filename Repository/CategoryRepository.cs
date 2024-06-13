@@ -15,6 +15,7 @@ namespace PokemonReviewer.Repository
 
         }
 
+        // Get database calls
         public bool CategoryExists(int id)
         {
             return _dataContext.Categories.Any(c => c.Id == id);
@@ -42,5 +43,32 @@ namespace PokemonReviewer.Repository
                                .Select(p => p.Pokemon)
                                .ToList();
         }
+
+        // Create database calls
+        public bool CreateCategory(Category category)
+        {
+        
+
+            _dataContext.Add(category);
+            return Save();
+        }
+        public bool UpdateCategoryById(Category category)
+        {
+            _dataContext.Update(category);
+            return Save();
+        }
+
+        public bool DeleteCategoryById(Category category)
+        {
+            _dataContext.Remove(category);
+            return Save();
+        }
+
+        public bool Save()
+        {
+            return _dataContext.SaveChanges() > 0 ? true : false;
+        }
+
+      
     }
 }

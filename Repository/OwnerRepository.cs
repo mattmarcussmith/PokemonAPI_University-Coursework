@@ -6,6 +6,7 @@ namespace PokemonReviewer.Repository
 {
 
 
+
     public class OwnerRepository : IOwnerRepository
     {
         public readonly DataContext _dataContext;
@@ -37,6 +38,26 @@ namespace PokemonReviewer.Repository
                                              .ToList();
         }
 
-       
+        public bool CreateOwner(Owner owner)
+        {
+            _dataContext.Add(owner);
+            return Save();
+        }
+        public bool UpdateOwnerById(Owner owner)
+        {
+            _dataContext.Update(owner);
+            return Save();
+        }
+        public bool DeleteOwnerById(Owner owner)
+        {
+            _dataContext.Remove(owner);
+            return Save();
+        }
+        public bool Save()
+        {
+            return _dataContext.SaveChanges() > 0 ? true : false;
+        }
+
+      
     }
 }

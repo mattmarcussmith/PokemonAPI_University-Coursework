@@ -39,6 +39,21 @@ namespace PokemonReviewer.Repository
                                        .ToList();
         }
 
-       
+        public bool CreateReview(Review review)
+        {
+            _dataContext.Add(review);
+            return Save();
+        }
+        public bool UpdateReviewById(Review review)
+        {
+            _dataContext.Update(review);
+            return Save();
+        }
+        public bool Save()
+        {
+            return _dataContext.SaveChanges() > 0 ? true : false;
+        }
+
+     
     }
 }

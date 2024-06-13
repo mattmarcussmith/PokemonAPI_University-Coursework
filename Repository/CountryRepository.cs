@@ -6,6 +6,7 @@ using PokemonReviewer.Models;
 namespace PokemonReviewer.Repository
 {
 
+
     public class CountryRepository : ICountryRepository
     {
         private readonly DataContext _dataContext;
@@ -52,5 +53,28 @@ namespace PokemonReviewer.Repository
                                .Where(c => c.Country.Id == countryId)
                                .ToList();
         }
+
+        public bool CreateCountry(Country country)
+        {
+            _dataContext.Add(country);
+            return Save();
+        }
+        public bool UpdateCountryById(Country country)
+        {
+            _dataContext.Update(country);
+            return Save();
+        }
+        public bool DeleteCountryById(Country country)
+        {
+           _dataContext.Remove(country);
+            return Save();
+
+        }
+        public bool Save()
+        {
+            return _dataContext.SaveChanges() > 0 ? true : false;
+        }
+
+     
     }
 }
