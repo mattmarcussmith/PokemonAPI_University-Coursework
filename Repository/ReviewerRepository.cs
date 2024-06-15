@@ -6,6 +6,7 @@ using PokemonReviewer.Models;
 namespace PokemonReviewer.Repository
 {
 
+
     public class ReviewerRepository : IReviewerRepository
     {
         private readonly DataContext _dataContext;
@@ -52,11 +53,17 @@ namespace PokemonReviewer.Repository
             _dataContext.Update(reviewer);
             return Save();
         }
+
+        public bool DeleteReviewerById(Reviewer reviewer)
+        {
+            
+            _dataContext.Remove(reviewer);
+            return Save();
+        }
         public bool Save()
         {
             return _dataContext.SaveChanges() > 0 ? true : false;
         }
 
-      
     }
 }

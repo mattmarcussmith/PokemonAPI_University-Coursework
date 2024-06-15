@@ -84,7 +84,7 @@ namespace PokemonReviewer.Repository
             return Save();
         }
 
-        public bool DeletePokemonById(Pokemon pokemon)
+        public bool DeletePokemon(Pokemon pokemon)
         {
             _dataContext.Remove(pokemon);
             return Save();

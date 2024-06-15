@@ -14,7 +14,7 @@ namespace PokemonReviewer.Interfaces
         // Create interface contracts
         bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon);
         bool UpdatePokemonById(int ownerId, int categoryId,  Pokemon pokemon);
-        bool DeletePokemonById(Pokemon pokemon);
+        bool DeletePokemon(Pokemon pokemon);
 
 
         bool Save();

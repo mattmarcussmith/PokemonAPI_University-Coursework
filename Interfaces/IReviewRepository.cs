@@ -11,6 +11,8 @@ namespace PokemonReviewer.Interfaces
 
         bool CreateReview(Review review);
         bool UpdateReviewById(Review review);
+        bool DeleteReviewById(Review review);
+        bool DeleteReviews(List<Review> reviews);
     
         bool Save();
     }

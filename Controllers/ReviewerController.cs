@@ -138,7 +138,33 @@ namespace PokemonReviewer.Controllers
 
             if (!_reviewerRepository.UpdateReviewerById(reviewerMapper))
             {
-                ModelState.AddModelError("", "Update error on save");
+                ModelState.AddModelError("", "Something went wrong while updating");
+                return StatusCode(500, ModelState);
+            }
+            return NoContent();
+
+        }
+        [HttpDelete("{reviewerId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+
+        public IActionResult DeleteReviewerById(int reviewerId)
+        {
+            if (!_reviewerRepository.ReviewerExists(reviewerId))
+            {
+                return NotFound();
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+
+            }
+            var reviewerDelete = _reviewerRepository.GetReviewerById(reviewerId);
+
+            if (!_reviewerRepository.DeleteReviewerById(reviewerDelete))
+            {
+                ModelState.AddModelError("", "Something went wrong while deleting");
                 return StatusCode(500, ModelState);
             }
             return NoContent();
