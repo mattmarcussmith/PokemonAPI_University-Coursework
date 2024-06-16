@@ -5,10 +5,18 @@ using PokemonReviewer.Interfaces;
 using PokemonReviewer.Repository;
 
 
+
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Host.ConfigureLogging(logging =>
+{
 
+    logging.AddConsole();
+    logging.AddDebug();
+    logging.AddEventSourceLogger();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddTransient<Seed>();

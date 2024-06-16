@@ -13,8 +13,6 @@ namespace PokemonReviewer.Controllers
     public class PokemonController : Controller
     {
         private readonly IPokemonRepository _pokemonRepository;
-        private readonly IOwnerRepository _ownerRepository;
-        private readonly ICategoryRepository _categoryRepository;
         private readonly IReviewRepository _reviewRepository;
 
         private readonly IMapper _mapper;

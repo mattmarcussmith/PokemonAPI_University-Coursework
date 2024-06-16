@@ -4,18 +4,14 @@ namespace PokemonReviewer.Interfaces
 {
     public interface IOwnerRepository
     {
-        ICollection<Owner> GetOwners();
-        Owner GetOwnerById(int ownerId);
-        ICollection<Pokemon> GetPokemonsByOwner(int ownerId);
-
-        bool OwnerExists(int ownerId); 
-        bool CreateOwner(Owner owner);
-
-        bool UpdateOwnerById(Owner owner);
-        bool DeleteOwnerById(Owner owner);
-
-
-        bool Save();
+        Task<ICollection<Owner>> GetOwners();
+        Task<Owner> GetOwnerById(int ownerId);
+        Task<ICollection<Pokemon>> GetPokemonsByOwner(int ownerId);
+        Task<bool> OwnerExists(int ownerId); 
+        Task<bool> CreateOwner(Owner owner);
+        Task<bool> UpdateOwnerById(Owner owner);
+        Task<bool> DeleteOwnerById(Owner owner);
+        Task<bool> Save();
 
     }
 }

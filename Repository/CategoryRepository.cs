@@ -1,74 +1,122 @@
-﻿using PokemonReviewer.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PokemonReviewer.Data;
 using PokemonReviewer.Interfaces;
 using PokemonReviewer.Models;
 
 namespace PokemonReviewer.Repository
 {
-
     public class CategoryRepository : ICategoryRepository
     {
 
         private readonly DataContext _dataContext;
-        public CategoryRepository(DataContext dataContext)
+        private readonly ILogger<CategoryRepository> _logger;
+
+        public CategoryRepository(DataContext dataContext, ILogger<CategoryRepository> logger)
         {
             _dataContext = dataContext;
-
+            _logger = logger;
         }
-
-        // Get database calls
-        public bool CategoryExists(int id)
+        public async Task<bool> CategoryExists(int id)
         {
-            return _dataContext.Categories.Any(c => c.Id == id);
-
+            try
+            {
+                return await _dataContext.Categories.AnyAsync(c => c.Id == id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to check if category with id {id} exists: {ex.Message}");
+                return false;
+            }
         }
-
-        public ICollection<Category> GetCategories()
+        public async Task<ICollection<Category>> GetCategories()
         {
-            return _dataContext.Categories
-                               .OrderBy(c => c.Id)
-                               .ToList();
+            try
+            {
+                return await _dataContext.Categories
+                                         .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to fetch categories: {ex.Message}");
+                return null;
+            }
         }
-
-        public Category GetCategoryById(int id)
+        public async Task<Category> GetCategoryById(int id)
         {
-            return _dataContext.Categories
+            try
+            {
+                return await _dataContext.Categories
                                .Where(c => c.Id == id)
-                               .FirstOrDefault();
+                               .FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to fetch category with id {id}: {ex.Message}" );
+                return null;
+            }
         }
 
-        public ICollection<Pokemon> GetPokemonsByCategoryId(int categoryId)
+        public async Task<ICollection<Pokemon>> GetPokemonsByCategoryId(int categoryId)
         {
-            return _dataContext.PokemonCategories
-                               .Where(c => c.CategoryId == categoryId)
-                               .Select(p => p.Pokemon)
-                               .ToList();
+            try
+            {
+                return await _dataContext.PokemonCategories
+                             .Where(c => c.CategoryId == categoryId)
+                             .Select(p => p.Pokemon)
+                             .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to fetch pokemon by category id {categoryId}: {ex.Message }");
+                return null;
+            }
+          
         }
 
-        // Create database calls
-        public bool CreateCategory(Category category)
+        public async Task<bool> CreateCategory(Category category)
         {
-        
+            try
+            {
+                await _dataContext.AddAsync(category);
+                return await Save();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to create category: {ex.Message}");
+                return false;
+            }
 
-            _dataContext.Add(category);
-            return Save();
         }
-        public bool UpdateCategoryById(Category category)
+        public async Task<bool> UpdateCategoryById(Category category)
         {
-            _dataContext.Update(category);
-            return Save();
+            try
+            {
+                _dataContext.Update(category);
+                return await Save();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to update category: {ex.Message}");
+                return false;
+            }
         }
-
-        public bool DeleteCategoryById(Category category)
+        public async Task<bool> DeleteCategoryById(Category category)
         {
-            _dataContext.Remove(category);
-            return Save();
+            try
+            {
+                _dataContext.Remove(category);
+                return await Save();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to delete category: {ex.Message}");
+                return false;
+            }
         }
-
-        public bool Save()
+        public async Task<bool> Save()
         {
-            return _dataContext.SaveChanges() > 0 ? true : false;
+            return await _dataContext.SaveChangesAsync() > 0 ? true : false;
         }
 
-      
     }
 }
