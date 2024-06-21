@@ -91,7 +91,7 @@ namespace PokemonReviewer.Controllers
             try
             {
                 _logger.LogInformation("GetCountryByOwner was called");
-                var country = await _countryRepository.GetCountryByOwner(ownerId);
+                var country = await _countryRepository.GetCountryByOwnerId(ownerId);
 
                 if (country == null)
                 {
@@ -150,9 +150,9 @@ namespace PokemonReviewer.Controllers
             try
             {
                 _logger.LogInformation("CreateCountry was called");
-                var country = _mapper.Map<Country>(countryCreate);
+              
 
-                if (country == null)
+                if (countryCreate == null)
                 {
                     _logger.LogWarning("Country object sent from client is null");
                     return BadRequest();
@@ -163,13 +163,19 @@ namespace PokemonReviewer.Controllers
                     _logger.LogWarning("Invalid model state for the CountryDto object");
                     return BadRequest(ModelState);
                 }
-
-                if (!await _countryRepository.CreateCountry(country))
+                if (await _countryRepository.CountryExist(countryCreate.Id))
+                {
+                    ModelState.AddModelError("", "Country already exists");
+                    return StatusCode(404, ModelState);
+                }
+                var countryMapper = _mapper.Map<Country>(countryCreate);
+   
+                if (!await _countryRepository.CreateCountry(countryMapper))
                 {
                     ModelState.AddModelError("", "Something went wrong while saving");
                     return StatusCode(500, ModelState);
                 }
-                return Ok("Country was created");
+                return Ok("Country created");
 
             } catch(Exception)
             {
@@ -189,28 +195,29 @@ namespace PokemonReviewer.Controllers
             {
                 _logger.LogInformation("UpdateCountryById was called");
 
-                var existingCountry = await _countryRepository.GetCountryById(countryId);
-                
-
-                if (existingCountry == null)
+                if(countryId != updatedCountryDto.Id)
+                {
+                    return BadRequest(ModelState);
+                }
+                if (!await _countryRepository.CountryExist(countryId))
+                {
+                    ModelState.AddModelError("", "Country does not exist");
+                    return StatusCode(404, ModelState);
+                }
+                if (updatedCountryDto == null)
                 {
                     _logger.LogWarning("Country object sent from client is null");
                     return BadRequest();
                 }
-                _mapper.Map(updatedCountryDto, existingCountry);
-
-                if (!await _countryRepository.CountryExist(countryId))
-                {
-                    return NotFound();
-                }
-
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for the CountryDto object");
                     return BadRequest(ModelState);
                 }
 
-                if (!await _countryRepository.UpdateCountryById(existingCountry))
+               var countryMapper =  _mapper.Map<Country>(updatedCountryDto);
+
+                if (!await _countryRepository.UpdateCountry(countryMapper))
                 {
                     ModelState.AddModelError("", "Something went wrong while updating");
                     return StatusCode(500, ModelState);
@@ -231,30 +238,31 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
 
-        public async Task<IActionResult> DeleteCountryById(int countryId)
+        public async Task<IActionResult> DeleteCountry(int countryId)
         {
             try
             {
-                _logger.LogInformation("DeleteCountryById was called");
-                var country = await _countryRepository.GetCountryById(countryId);
-
-                if (country == null)
+                if (!await _countryRepository.CountryExist(countryId))
                 {
+
                     return NotFound();
                 }
+                var countryDelete = await _countryRepository.GetCountryById(countryId);
 
-                if (!await _countryRepository.DeleteCountryById(country))
+                if (!await _countryRepository.DeleteCountry(countryDelete))
                 {
-                    ModelState.AddModelError("", "Something went wrong while deleting");
+                    ModelState.AddModelError("", "Something went wrong while deleting the country");
                     return StatusCode(500, ModelState);
                 }
-                return NoContent();
 
-            } catch(Exception)
+                return NoContent();
+            }
+            catch (Exception)
             {
                 _logger.LogError("Something went wrong inside DeleteCountryById action");
                 return StatusCode(500, "Internal server error");
             }
+
             
         }
     }

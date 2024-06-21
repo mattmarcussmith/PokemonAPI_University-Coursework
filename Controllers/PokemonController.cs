@@ -14,130 +14,171 @@ namespace PokemonReviewer.Controllers
     {
         private readonly IPokemonRepository _pokemonRepository;
         private readonly IReviewRepository _reviewRepository;
-
         private readonly IMapper _mapper;
-        public PokemonController(IPokemonRepository pokemonRepository, IReviewRepository reviewRepository, IMapper mapper)
+        private readonly ILogger<PokemonController> _logger;
+        public PokemonController(IPokemonRepository pokemonRepository, IReviewRepository reviewRepository, IMapper mapper, ILogger<PokemonController> logger)
         {
             _pokemonRepository = pokemonRepository;
             _reviewRepository = reviewRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
         [ProducesResponseType(400)]
-        public IActionResult GetPokemons()
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetPokemons()
         {    
-            var pokemons = _mapper.Map<List<PokemonDto>>(_pokemonRepository.GetPokemons());
-            if(!ModelState.IsValid) { return BadRequest(ModelState); }
-            return Ok(pokemons);
+           try
+            {
+                _logger.LogInformation("GetPokemons was called");
+                var pokemons = await _pokemonRepository.GetPokemons();
+
+                if (pokemons == null)
+                {
+                    _logger.LogWarning("No pokemons found");
+                    return NotFound();
+                }
+                _logger.LogInformation("Returning pokemons");
+                var pokemonsDto = _mapper.Map<List<PokemonDto>>(pokemons);
+                return Ok(pokemonsDto);
+            } catch(Exception)
+            {
+                _logger.LogError("Something went wrong inside GetPokemons action");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         [HttpGet("{pokemonId}")]
         [ProducesResponseType(200, Type=typeof(Pokemon))]
         [ProducesResponseType(400)]
-        public IActionResult GetPokemonById(int pokemonId)
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetPokemonById(int pokemonId)
         {
-            if(!_pokemonRepository.PokemonExists(pokemonId))
+            try
             {
-                return NotFound();
-            }
-            var pokemon = _mapper.Map<PokemonDto>(_pokemonRepository.GetPokemonById(pokemonId));
-            if(!ModelState.IsValid)
+                var existingPokemon = await _pokemonRepository.GetPokemonById(pokemonId);
+                if (existingPokemon == null)
+                {
+                    _logger.LogWarning($"Pokemon with id {pokemonId} not found");
+                    return NotFound();
+                }
+                var pokemon = _mapper.Map<PokemonDto>(existingPokemon);
+                return Ok(pokemon);
+            } catch(Exception)
             {
-                return BadRequest(ModelState);
+                _logger.LogError("Something went wrong inside GetPokemonById action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(pokemon);
         }
 
         [HttpGet("{pokemonId}/rating")]
         [ProducesResponseType(200, Type = typeof(decimal))]
         [ProducesResponseType(400)]
-        public IActionResult GetPokemonRating(int pokemonId)
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetPokemonRating(int pokemonId)
         {
-            if (!_pokemonRepository.PokemonExists(pokemonId))
+            try
             {
-                return NotFound();
-            }
-            var rating = _pokemonRepository.GetPokemonRating(pokemonId);
-            if(!ModelState.IsValid)
+                var existingRating = await _pokemonRepository.GetPokemonRating(pokemonId);
+                if (!await _pokemonRepository.PokemonExist(pokemonId))
+                {
+                    return NotFound();
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                return Ok(existingRating);
+            } catch(Exception)
             {
-                return BadRequest(ModelState);
+                _logger.LogError("Something went wrong inside GetPokemonRating action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(rating);
-
         }
 
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public IActionResult CreatePokemon([FromQuery] int ownerId, [FromQuery] int categoryId, [FromBody] PokemonDto pokemonCreate)
+        [ProducesResponseType(422)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> CreatePokemon([FromQuery] int ownerId, [FromQuery] int categoryId, [FromBody] PokemonDto pokemonCreateDto)
         {
-            if(pokemonCreate == null)
+            try
             {
-                return BadRequest(ModelState);
+                _logger.LogInformation("CreatePokemon was called");
+                if (pokemonCreateDto == null)
+                {
+                    _logger.LogWarning("Pokemon object sent from client is null");
+                    return BadRequest();
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for the PokemonDto object");
+                    return BadRequest(ModelState);
+                }
+                var pokemonMapper = _mapper.Map<Pokemon>(pokemonCreateDto);
+                if (! await _pokemonRepository.CreatePokemon(ownerId, categoryId, pokemonMapper))
+                {
+                    ModelState.AddModelError("", "Something went wrong while saving the pokemon");
+                    return StatusCode(500, ModelState);
+                }
+                return Ok("Pokemon created");
 
-            }
-            var pokemons = _pokemonRepository.GetPokemons()
-                                             .Where(p => p.Name.Trim().ToUpper() == 
-                                             pokemonCreate.Name.Trim().ToUpper()).FirstOrDefault();
-
-            if(!ModelState.IsValid)
+            } catch(Exception)
             {
-                return BadRequest(ModelState);
-                
+                _logger.LogError("Something went wrong inside CreatePokemon action");
+                return StatusCode(500, "Internal server error");
             }
-            if (pokemons != null)
-            {
-                ModelState.AddModelError("", "Pokemon already exists");
-                return StatusCode(422, ModelState);
-            }
-            var pokemonMapper = _mapper.Map<Pokemon>(pokemonCreate);
-
-            if (!_pokemonRepository.CreatePokemon(ownerId, categoryId, pokemonMapper))
-            {
-                ModelState.AddModelError("", "Something went wrong while saving");
-
-                return StatusCode(500, ModelState);
-            }
-
-            return Ok("Successfully created");
-
+      
+         
         }
+
         [HttpPut("{pokemonId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-
-        public IActionResult UpdatePokemonById(int pokemonId, [FromQuery] int ownerId, [FromQuery] int categoryId, [FromBody] PokemonDto updatedPokemon)
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdatePokemonById(int pokemonId, [FromQuery] int ownerId, [FromQuery] int categoryId, [FromBody] PokemonDto updatedPokemonDto)
         {
-            if (updatedPokemon == null)
+           try
             {
-                return BadRequest();
-            }
-            if (pokemonId != updatedPokemon.Id)
-            {
-                return BadRequest(ModelState);
-
-            }
-            if (!_pokemonRepository.PokemonExists(pokemonId))
-            {
-                return NotFound();
-            }
-            if (!ModelState.IsValid)
-            {
-                BadRequest(ModelState);
-            }
-
-            var pokemonMapper = _mapper.Map<Pokemon>(updatedPokemon);
+                _logger.LogInformation("UpdatePokemonById was called");
+           
+                if(pokemonId != updatedPokemonDto.Id)
+                {
+                    return BadRequest(ModelState);
+                }
+                if(updatedPokemonDto == null)
+                {
+                    _logger.LogWarning("Pokemon object sent from client is null");
+                    return BadRequest();
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for the PokemonDto object");
+                    return BadRequest(ModelState);
+                }
             
+              var pokemonMapper =  _mapper.Map<Pokemon>(updatedPokemonDto);
 
-            if (!_pokemonRepository.UpdatePokemonById(ownerId, categoryId, pokemonMapper))
+                if (!await _pokemonRepository.UpdatePokemon(ownerId, categoryId, pokemonMapper))
+                {
+                    ModelState.AddModelError("", "Something went wrong while updating");
+                    return StatusCode(500, ModelState);
+                }
+                return NoContent();
+
+            } catch(Exception)
             {
-                ModelState.AddModelError("", "Update error on save");
-                return StatusCode(500, ModelState);
+                _logger.LogError("Something went wrong inside UpdatePokemonById action");
+                return StatusCode(500, "Internal server error");
             }
-            return NoContent();
+              
 
         }
 
@@ -145,32 +186,31 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
 
-        public IActionResult DeletePokemon(int pokemonId)
+        public async Task<IActionResult> DeletePokemon(int pokemonId)
         {
-            if (!_pokemonRepository.PokemonExists(pokemonId))
+            try
             {
-                return NotFound();
+
+                if (!await _pokemonRepository.PokemonExist(pokemonId))
+                {
+
+                    return NotFound();
+                }
+                var pokemonDelete = await _pokemonRepository.GetPokemonById(pokemonId);
+
+                if (!await _pokemonRepository.DeletePokemon(pokemonDelete))
+                {
+                    ModelState.AddModelError("", "Something went wrong while deleting the reviewer");
+                    return StatusCode(500, ModelState);
+                }
+
             }
-
-            var pokemonDelete = _pokemonRepository.GetPokemonById(pokemonId);
-            var reviewsToDelete = _reviewRepository.GetReviewsOfAPokemon(pokemonId);
-
-
-            if (!ModelState.IsValid)
+            catch (Exception)
             {
-                return BadRequest(ModelState);
-            }
-            if(!_reviewRepository.DeleteReviews(reviewsToDelete.ToList()))
-            {
-                ModelState.AddModelError("", "Something went wrong while deleting");
-                return StatusCode(500, ModelState);
-            }
-
-            if (!_pokemonRepository.DeletePokemon(pokemonDelete))
-            {
-                ModelState.AddModelError("", "Something went wrong while deleting");
-                return StatusCode(500, ModelState);
+                _logger.LogError("Something went wrong inside DeletePokemon action");
+                return StatusCode(500, "Internal server error");
             }
             return NoContent();
         }

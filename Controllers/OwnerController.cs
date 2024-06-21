@@ -14,92 +14,124 @@ namespace PokemonReviewer.Controllers
         private readonly IOwnerRepository _ownerRepository;
         private readonly ICountryRepository _countryRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<OwnerRepository> _logger;
 
-        public OwnerController(IOwnerRepository ownerRepository, ICountryRepository countryRepository, IMapper mapper) 
+        public OwnerController(IOwnerRepository ownerRepository, ICountryRepository countryRepository, IMapper mapper, ILogger<OwnerRepository> logger) 
         {
             _ownerRepository = ownerRepository;
             _countryRepository = countryRepository;
             _mapper = mapper;
+            _logger = logger;
 
         }
 
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Owner>))]
         [ProducesResponseType(400)]
-        public IActionResult GetOwners()
+        public async Task<IActionResult> GetOwners()
         {
-            var owners = _mapper.Map<List<OwnerDto>>(_ownerRepository.GetOwners());
-            if(!ModelState.IsValid)
+            try
             {
-                return NotFound();
+                _logger.LogInformation("GetOwners was called");
+                var owners = await _ownerRepository.GetOwners();
+                if (owners == null)
+                {
+                    _logger.LogWarning("No owners found");
+                    return NotFound();
+                }
+                var ownersDto = _mapper.Map<List<OwnerDto>>(owners);
+                return Ok(ownersDto);
+
+            } catch(Exception)
+            {
+                _logger.LogError("Something went wrong inside GetOwners action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(owners);
         }
 
         [HttpGet("{ownerId}")]
         [ProducesResponseType(200, Type = typeof(Owner))]
         [ProducesResponseType(400)]
-        public IActionResult GetOwnerById(int ownerId)
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetOwnerById(int ownerId)
         {
-            if(!_ownerRepository.OwnerExists(ownerId))
+           try
             {
-                return NotFound();
-            }
-            var ownerById = _mapper.Map<OwnerDto>(_ownerRepository.GetOwnerById(ownerId));
-            if(!ModelState.IsValid)
+               var existingOwner = await _ownerRepository.GetOwnerById(ownerId);
+                if (existingOwner == null)
+                {
+                    _logger.LogWarning($"Owner with id {ownerId} not found");
+                    return NotFound();
+                }
+                var owner = _mapper.Map<OwnerDto>(existingOwner);
+                return Ok(owner);
+
+            } catch(Exception)
             {
-                return BadRequest();
+                _logger.LogError("Something went wrong inside GetOwnerById action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(ownerById);
         }
 
         [HttpGet("{ownerId}/pokemon")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Owner>))]
         [ProducesResponseType(400)]
-
-        public IActionResult GetPokemonsByOwner(int ownerId)
+        public async Task<IActionResult> GetPokemonsByOwner(int ownerId)
         {
-            var owner = _mapper.Map<List<OwnerDto>>(_ownerRepository.GetPokemonsByOwner(ownerId));
-            if(!ModelState.IsValid)
+            try
             {
-                return BadRequest();
+                var existingPokemons = await _ownerRepository.GetPokemonsByOwnerId(ownerId);
+                if (existingPokemons == null)
+                {
+                    _logger.LogWarning($"No pokemons found for owner with id {ownerId}");
+                    return NotFound();
+                }
+                var pokemonsDto = _mapper.Map<List<PokemonDto>>(existingPokemons);
+                return Ok(pokemonsDto);
 
+            } catch(Exception)
+            {
+                _logger.LogError("Something went wrong inside GetPokemonsByOwner action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(owner);
-
         }
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-
-        public IActionResult CreateOwner([FromQuery] int countryId, [FromBody] OwnerDto ownerCreate)
+        
+        public async Task<IActionResult> CreateOwner([FromBody] OwnerDto ownerCreateDto)
         {
-            if(ownerCreate == null)
+           try
             {
-                return BadRequest(ModelState);
-            }
+                if (ownerCreateDto == null)
+                {
+                    return BadRequest();
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            var owner = _ownerRepository.GetOwners().Where(o => o.LastName.Trim().ToUpper() == ownerCreate.LastName.ToUpper()).FirstOrDefault();
+                if (await _ownerRepository.OwnerExist(ownerCreateDto.Id))
+                {
+                    ModelState.AddModelError("", "Owner already exists");
+                    return StatusCode(404, ModelState);
+                }
 
-            if(owner != null)
+                var ownerMapper = _mapper.Map<Owner>(ownerCreateDto);
+                if (!await _ownerRepository.CreateOwner(ownerMapper))
+                {
+                    ModelState.AddModelError("", "Something went wrong while saving the owner");
+                    return StatusCode(500, ModelState);
+                }
+                return Ok("Owner created");
+
+            } catch (Exception)
             {
-                ModelState.AddModelError("", "This owner already exist");
-                return StatusCode(422, ModelState);
+                _logger.LogError("Something went wrong inside CreateOwner action");
+                return StatusCode(500, "Internal server error");
             }
-            if(!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var ownerMapper = _mapper.Map<Owner>(ownerCreate);
-            ownerMapper.Country = _countryRepository.GetCountryById(countryId);
-
-            if(!_ownerRepository.CreateOwner(ownerMapper))
-            {
-                 ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
-            }
-            return Ok("successfully created");
 
         }
 
@@ -107,64 +139,72 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-
-        public IActionResult UpdateCategoryById(int ownerId, [FromBody] OwnerDto updatedOwner)
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateOwner(int ownerId, [FromBody] OwnerDto updatedOwnerDto)
         {
-            if (updatedOwner == null)
+            try
             {
-                return BadRequest();
-            }
-            if (ownerId != updatedOwner.Id)
-            {
-                return BadRequest(ModelState);
-
-            }
-            if (!_ownerRepository.OwnerExists(ownerId))
-            {
-                return NotFound();
-            }
-            if (!ModelState.IsValid)
-            {
-                BadRequest(ModelState);
-            }
-
-            var ownerMapper = _mapper.Map<Owner>(updatedOwner);
+                _logger.LogInformation("UpdateOwnerById was called");
+                if(ownerId != updatedOwnerDto.Id)
+                {
+                    return BadRequest(ModelState);
+                }
+                if (updatedOwnerDto == null)
+                {
+                    _logger.LogWarning("Owner object sent from client is null");
+                    return NotFound();
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for the OwnerDto object");
+                    return BadRequest(ModelState);
+                }
 
 
-            if (!_ownerRepository.UpdateOwnerById(ownerMapper))
+               var ownerMapper = _mapper.Map<Owner>(updatedOwnerDto);
+                if (!await _ownerRepository.UpdateOwner(ownerMapper))
+                {
+                    ModelState.AddModelError("", "Something went wrong while updating");
+                    return StatusCode(500, ModelState);
+                }
+                return NoContent();
+
+            } catch(Exception)
             {
-                ModelState.AddModelError("", "Update error on save");
-                return StatusCode(500, ModelState);
+                _logger.LogError("Something went wrong inside UpdateOwnerById action");
+                return StatusCode(500, "Internal server error");
             }
-            return NoContent();
 
         }
         [HttpDelete("{ownerId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-
-        public IActionResult DeleteCountryById(int ownerId)
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteOwner(int ownerId)
         {
-            if (!_ownerRepository.OwnerExists(ownerId))
+            try
             {
-                return NotFound();
-            }
+                if (!await _ownerRepository.OwnerExist(ownerId))
+                {
 
-            var ownerDelete = _ownerRepository.GetOwnerById(ownerId);
+                    return NotFound();
+                }
+                var ownerDelete = await _ownerRepository.GetOwnerById(ownerId);
 
-            if (!ModelState.IsValid)
+                if (!await _ownerRepository.DeleteOwner(ownerDelete))
+                {
+                    ModelState.AddModelError("", "Something went wrong while deleting the reviewer");
+                    return StatusCode(500, ModelState);
+                }
+
+                return NoContent();
+
+            } catch(Exception)
             {
-                return BadRequest();
+                _logger.LogError("Something went wrong inside DeleteOwnerById action");
+                return StatusCode(500, "Internal server error");
             }
-
-
-            if (!_ownerRepository.DeleteOwnerById(ownerDelete))
-            {
-                ModelState.AddModelError("", "Something went wrong while deleting");
-                return StatusCode(500, ModelState);
-            }
-            return NoContent();
         }
 
     }

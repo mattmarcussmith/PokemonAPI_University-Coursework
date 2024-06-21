@@ -4,19 +4,15 @@ namespace PokemonReviewer.Interfaces
 {
     public interface IPokemonRepository
     {
-        // Get interface contracts
-        ICollection<Pokemon> GetPokemons();
-        Pokemon GetPokemonById(int id);
-        Pokemon GetPokemonByName(string name);
-        decimal GetPokemonRating(int rating);
-        bool PokemonExists(int id);
-
-        // Create interface contracts
-        bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon);
-        bool UpdatePokemonById(int ownerId, int categoryId,  Pokemon pokemon);
-        bool DeletePokemon(Pokemon pokemon);
-
-
-        bool Save();
+     
+        Task<ICollection<Pokemon>> GetPokemons();
+        Task<Pokemon> GetPokemonByName(string name);
+        Task<Pokemon> GetPokemonById(int pokemonId);
+        Task<decimal> GetPokemonRating(int rating);
+        Task<bool> PokemonExist(int pokemonId);
+        Task<bool> CreatePokemon(int ownerId, int categoryId, Pokemon pokemon);
+        Task<bool> UpdatePokemon(int ownerId, int categoryId,  Pokemon pokemon);
+        Task<bool> DeletePokemon(Pokemon pokemon);
+        Task<bool> Save();
     }
 }

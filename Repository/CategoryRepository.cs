@@ -16,15 +16,15 @@ namespace PokemonReviewer.Repository
             _dataContext = dataContext;
             _logger = logger;
         }
-        public async Task<bool> CategoryExists(int id)
+        public async Task<bool> CategoryExist(int categoryId)
         {
             try
             {
-                return await _dataContext.Categories.AnyAsync(c => c.Id == id);
+                return await _dataContext.Categories.AnyAsync(c => c.Id == categoryId);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to check if category with id {id} exists: {ex.Message}");
+                _logger.LogError($"Failed to check if category with id {categoryId} exists: {ex.Message}");
                 return false;
             }
         }
@@ -41,17 +41,17 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
-        public async Task<Category> GetCategoryById(int id)
+        public async Task<Category> GetCategoryById(int categoryId)
         {
             try
             {
                 return await _dataContext.Categories
-                               .Where(c => c.Id == id)
+                               .Where(c => c.Id == categoryId)
                                .FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to fetch category with id {id}: {ex.Message}" );
+                _logger.LogError($"Failed to fetch category with id {categoryId}: {ex.Message}" );
                 return null;
             }
         }
@@ -87,31 +87,37 @@ namespace PokemonReviewer.Repository
             }
 
         }
-        public async Task<bool> UpdateCategoryById(Category category)
+        public async Task<bool> UpdateCategory(Category category)
         {
             try
             {
-                _dataContext.Update(category);
-                return await Save();
-            }
-            catch (Exception ex)
+                var existingCategory = await _dataContext.Categories.Where(c => c.Id == category.Id).FirstOrDefaultAsync();
+                if (existingCategory == null)
+                {
+                    _logger.LogError($"Category with id {category.Id} not found");
+                    return false;
+                }
+                _dataContext.Update(existingCategory);
+
+            } catch(Exception ex)
             {
                 _logger.LogError($"Failed to update category: {ex.Message}");
                 return false;
             }
+            return await Save();
         }
-        public async Task<bool> DeleteCategoryById(Category category)
+        public async Task<bool> DeleteCategory(Category category)
         {
             try
             {
                 _dataContext.Remove(category);
-                return await Save();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to delete category: {ex.Message}");
+                _logger.LogError($"Failed to delete category with id {category.Id}: {ex.Message}");
                 return false;
             }
+            return await Save();
         }
         public async Task<bool> Save()
         {

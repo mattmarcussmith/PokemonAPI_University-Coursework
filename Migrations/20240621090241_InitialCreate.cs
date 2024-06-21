@@ -146,8 +146,8 @@ namespace PokemonReviewer.Migrations
                 {
                     table.PrimaryKey("PK_PokemonOwners", x => new { x.PokemonId, x.OwnerId });
                     table.ForeignKey(
-                        name: "FK_PokemonOwners_Owners_PokemonId",
-                        column: x => x.PokemonId,
+                        name: "FK_PokemonOwners_Owners_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "Owners",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -168,6 +168,11 @@ namespace PokemonReviewer.Migrations
                 name: "IX_PokemonCategories_CategoryId",
                 table: "PokemonCategories",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PokemonOwners_OwnerId",
+                table: "PokemonOwners",
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_PokemonId",

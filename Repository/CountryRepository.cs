@@ -6,6 +6,8 @@ using PokemonReviewer.Models;
 
 namespace PokemonReviewer.Repository
 {
+
+
     public class CountryRepository : ICountryRepository
     {
         private readonly DataContext _dataContext;
@@ -19,12 +21,11 @@ namespace PokemonReviewer.Repository
         public async Task<bool> CountryExist(int countryId)
         {
             try
+            {  
+              return await _dataContext.Countries.AnyAsync(c => c.Id == countryId);
+            } catch(Exception)
             {
-                return await _dataContext.Countries.AnyAsync(c => c.Id == countryId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to check if country with id {countryId} exists: {ex.Message}");
+                _logger.LogError($"Country with id: {countryId} not found");
                 return false;
             }
         }
@@ -35,28 +36,26 @@ namespace PokemonReviewer.Repository
                 return await _dataContext.Countries
                                .OrderBy(c => c.Id)
                                .ToListAsync();
-            }
-            catch (Exception ex)
+            } catch (Exception)
             {
-                _logger.LogError($"Failed to fetch countries: {ex.Message}");
+                _logger.LogError("No countries found");
                 return null;
-            }
+            } 
         }
-        public async Task<Country> GetCountryById(int id)
+        public async Task<Country> GetCountryById(int countryId)
         {
             try
             {
                 return await _dataContext.Countries
-                               .Where(c => c.Id == id)
+                               .Where(c => c.Id == countryId)
                                .FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
-                _logger.LogError($"Failed to fetch country with id {id}: {ex.Message}");
+                _logger.LogError($"Failed to fetch category with id {countryId}: {ex.Message}");
                 return null;
             }
         }
-        public async Task<Country> GetCountryByOwner(int ownerId)
+        public async Task<Country> GetCountryByOwnerId(int ownerId)
         {
             try
             {
@@ -64,10 +63,9 @@ namespace PokemonReviewer.Repository
                                .Where(o => o.Id == ownerId)
                                .Select(c => c.Country)
                                .FirstOrDefaultAsync();
-            }
-            catch (Exception)
+            } catch(Exception)
             {
-                _logger.LogError($"Owner with id: {ownerId} not found");
+                _logger.LogError($"Country with owner id: {ownerId} not found");
                 return null;
             }
         }
@@ -78,10 +76,9 @@ namespace PokemonReviewer.Repository
                 return await _dataContext.Owners
                                .Where(c => c.Country.Id == countryId)
                                .ToListAsync();
-            }
-            catch (Exception ex)
+            } catch(Exception)
             {
-                _logger.LogError($"Failed to fetch owners by country id {countryId}: {ex.Message}");
+                _logger.LogError($"Country with id: {countryId} not found");
                 return null;
             }
         }
@@ -90,39 +87,49 @@ namespace PokemonReviewer.Repository
             try
             {
                 await _dataContext.AddAsync(country);
-                return await Save();
+               
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError($"Failed to create country: {ex.Message}");
+                _logger.LogError("Something went wrong inside CreateCountry action");
                 return false;
             }
+            return await Save();
         }
-        public async Task<bool> UpdateCountryById(Country country)
+        public async Task<bool> UpdateCountry(Country country)
         {
             try
             {
-                _dataContext.Update(country);
-                return await Save();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to update country with id {country.Id}: {ex.Message}");
+                var existingCountry = await _dataContext.Countries.Where(c => c.Id == country.Id).FirstOrDefaultAsync();
+                if (existingCountry == null)
+                {
+                    _logger.LogError($"Country with id: {country.Id} not found");
+                    return false;
+                }
+
+                _dataContext.Update(existingCountry);
+            } catch(Exception ex)
+            { 
+                _logger.LogError($"Failed to update country: {ex.Message}");
                 return false;
             }
+            return await Save();
+
         }
-        public async Task<bool> DeleteCountryById(Country country)
+        public async Task<bool> DeleteCountry(Country country)
         {
             try
             {
                 _dataContext.Remove(country);
-                return await Save();
+             
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError($"Country with id: {country.Id} not found");
+                _logger.LogError($"Failed to delete country{country.Id} : {ex.Message}");
                 return false;
             }
+
+            return await Save();
         }
         public async Task<bool> Save()
         {

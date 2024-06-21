@@ -13,97 +13,141 @@ namespace PokemonReviewer.Controllers
     public class ReviewerController : Controller
     {
         private readonly IReviewerRepository _reviewerRepository;
+        private readonly ILogger<ReviewerRepository> _logger;
         private readonly IMapper _mapper;
 
-        public ReviewerController(IReviewerRepository reviewerRepository, IMapper mapper)
+        public ReviewerController(IReviewerRepository reviewerRepository, ILogger <ReviewerRepository> logger,  IMapper mapper)
         {
             _reviewerRepository = reviewerRepository;
+            _logger = logger;
             _mapper = mapper;
         }
 
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Reviewer>))]
         [ProducesResponseType(400)]
-
-        public IActionResult GetReviewers()
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetReviewers()
         {
-          var reviewers = _mapper.Map
-                <List<ReviewerDto>>(_reviewerRepository.GetReviewers());
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest();
+                _logger.LogInformation("GetReviewers was called");
+                var reviewers = await _reviewerRepository.GetReviewers();
+                if (reviewers == null)
+                {
+                    _logger.LogWarning("No reviewers found");
+                    return NotFound();
+                }
+                _logger.LogInformation("Returning reviewers");
+                var reviewersDto = _mapper.Map<List<ReviewerDto>>(reviewers);
+                return Ok(reviewersDto);
+
+            } catch(Exception)
+            {
+                _logger.LogError("Something went wrong inside GetReviewers action");
+                return StatusCode(500, "Internal server error");
             }
-           return Ok(reviewers);
         }
 
         [HttpGet("{reviewerId}")]
         [ProducesResponseType(200, Type = typeof(Reviewer))]
         [ProducesResponseType(400)]
-        public IActionResult GetReviewerById(int reviewerId)
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetReviewerById(int reviewerId)
         {
-            if(!_reviewerRepository.ReviewerExists(reviewerId))
+           try
             {
-                return NotFound();
-            }
-            var reviewer = _mapper.Map<ReviewerDto>(_reviewerRepository.GetReviewerById(reviewerId));
-            if(!ModelState.IsValid)
+                _logger.LogInformation("GetReviewerById was called");
+                var reviewer = await _reviewerRepository.GetReviewerById(reviewerId);
+                if (reviewer == null)
+                {
+                    _logger.LogWarning("No reviewer found");
+                    return NotFound();
+                }
+                _logger.LogInformation("Returning reviewer");
+
+                var reviewerDto = _mapper.Map<ReviewerDto>(reviewer);
+
+                return Ok(reviewerDto);
+
+            } catch(Exception)
             {
-                return BadRequest();
+                _logger.LogError("Something went wrong inside GetReviewerById action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(reviewer);
         }
         [HttpGet("{reviewerId}/reviews")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Reviewer>))]
         [ProducesResponseType(400)]
-        public IActionResult GetReviewsByReviewer(int reviewerId)
+        public async Task<IActionResult> GetReviewsByReviewer(int reviewerId)
         {
-            if(!_reviewerRepository.ReviewerExists(reviewerId))
+            try
             {
-                return NotFound();
-            }
-            var reviews = _mapper.Map<List<ReviewDto>>(_reviewerRepository.GetReviewsByReviewer(reviewerId));
+                _logger.LogInformation("GetReviewsByReviewer was called");
+                var reviews = await _reviewerRepository.GetReviewsByReviewer(reviewerId);
+                if (reviews == null)
+                {
+                    _logger.LogWarning("No reviews found");
+                    return NotFound();
+                }
+                _logger.LogInformation("Returning reviews");
+                var reviewsDto = _mapper.Map<List<ReviewDto>>(reviews);
+                return Ok(reviewsDto);
 
-            if(!ModelState.IsValid)
+            } catch(Exception)
             {
-                return BadRequest();
+                _logger.LogError("Something went wrong inside GetReviewsByReviewer action");
+                return StatusCode(500, "Internal server error");
             }
-            return Ok(reviews);
         }
 
 
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public IActionResult CreateReviewer([FromBody] ReviewerDto reviewerCreate)
+        [ProducesResponseType(500)]
+        public async  Task<IActionResult> CreateReviewer([FromBody] ReviewerDto reviewerCreate)
         {
-            if (reviewerCreate == null)
+            try
             {
-                return BadRequest(ModelState);
+                _logger.LogInformation("CreateReviewer was called");
+                
 
-            }
-            var review = _reviewerRepository.GetReviewers()
-                                            .Where(r => r.Id == reviewerCreate.Id)
-                                            .FirstOrDefault();                        
+                if (reviewerCreate == null)
+                {
+                    _logger.LogError("Reviewer object sent from client is null");
+                    return BadRequest();
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogError("Invalid reviewer object sent from client");
+                    return BadRequest(ModelState);
+                }
 
-            if (!ModelState.IsValid)
+                if (await _reviewerRepository.ReviewerExist(reviewerCreate.Id))
+                {
+                    ModelState.AddModelError("", "Reviewer already exists");
+                    return StatusCode(404, ModelState);
+                }
+
+                var reviewerEntity = _mapper.Map<Reviewer>(reviewerCreate);
+              
+                if (!await _reviewerRepository.CreateReviewer(reviewerEntity))
+                {
+                    ModelState.AddModelError("", "Something went wrong while saving the reviewer");
+                    return StatusCode(500, ModelState);
+                }
+
+                return Ok("Reviewer Created");
+
+
+            } catch(Exception)
             {
-                return BadRequest(ModelState);
-
+                _logger.LogError("Something went wrong inside CreateReviewer action");
+                return StatusCode(500, "Internal server error");
             }
-            if (review != null)
-            {
-                ModelState.AddModelError("", "reviewer already exists");
-                return StatusCode(422, ModelState);
-            }
-            var reviewerMapper = _mapper.Map<Reviewer>(reviewerCreate);
-           
-            if (!_reviewerRepository.CreateReviewer(reviewerMapper))
-            {
-                ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
-            }
-
-            return Ok("Successfully created");
 
         }
 
@@ -113,35 +157,41 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
 
-        public IActionResult UpdateCategoryById(int reviewerId, [FromBody] ReviewerDto updatedReviewer)
+        public async Task<IActionResult> UpdateReviewer(int reviewerId, [FromBody] ReviewerDto updatedReviewerDto)
         {
-            if (updatedReviewer == null)
+            try
             {
-                return BadRequest();
-            }
-            if (reviewerId != updatedReviewer.Id)
-            {
-                return BadRequest(ModelState);
+                _logger.LogInformation("UpdateReviewerById was called");
+            
+                if(reviewerId != updatedReviewerDto.Id)
+                {
+                    return BadRequest(ModelState);
+                }
+                if (updatedReviewerDto == null)
+                {
+                    _logger.LogWarning("Reviewer object sent from client is null");
+                    return NotFound();
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid reviewer object sent from client");
+                    return BadRequest(ModelState);
+                }
+           
+                
+                var reviewerMapper = _mapper.Map<Reviewer>(updatedReviewerDto);
+                if (!await _reviewerRepository.UpdateReviewer(reviewerMapper))
+                {
+                    ModelState.AddModelError("", "Something went wrong while updating the reviewer");
+                    return StatusCode(500, ModelState);
+                }
+                return NoContent();
 
-            }
-            if (!_reviewerRepository.ReviewerExists(reviewerId))
+            } catch(Exception)
             {
-                return NotFound();
+                _logger.LogError("Something went wrong inside UpdateReviewerById action");
+                return StatusCode(500, "Internal server error");
             }
-            if (!ModelState.IsValid)
-            {
-                BadRequest(ModelState);
-            }
-
-            var reviewerMapper = _mapper.Map<Reviewer>(updatedReviewer);
-
-
-            if (!_reviewerRepository.UpdateReviewerById(reviewerMapper))
-            {
-                ModelState.AddModelError("", "Something went wrong while updating");
-                return StatusCode(500, ModelState);
-            }
-            return NoContent();
 
         }
         [HttpDelete("{reviewerId}")]
@@ -149,25 +199,30 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
 
-        public IActionResult DeleteReviewerById(int reviewerId)
+        public async Task<IActionResult> DeleteReviewer(int reviewerId)
         {
-            if (!_reviewerRepository.ReviewerExists(reviewerId))
+           try
             {
-                return NotFound();
-            }
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
+                if(!await _reviewerRepository.ReviewerExist(reviewerId)) {
 
-            }
-            var reviewerDelete = _reviewerRepository.GetReviewerById(reviewerId);
+                    return NotFound();
 
-            if (!_reviewerRepository.DeleteReviewerById(reviewerDelete))
+                }
+                var reviewerDelete = await _reviewerRepository.GetReviewerById(reviewerId);
+
+                if (!await _reviewerRepository.DeleteReviewer(reviewerDelete))
+                {
+                    ModelState.AddModelError("", "Something went wrong while deleting the reviewer");
+                    return StatusCode(500, ModelState);
+                }
+
+             return NoContent();
+            } catch(Exception)
             {
-                ModelState.AddModelError("", "Something went wrong while deleting");
-                return StatusCode(500, ModelState);
+                _logger.LogError("Something went wrong inside DeleteReviewerById action");
+                return StatusCode(500, "Internal server error");
             }
-            return NoContent();
+     
 
         }
     }
