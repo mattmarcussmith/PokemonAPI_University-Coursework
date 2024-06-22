@@ -40,9 +40,6 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to fetch review with id {reviewId}: {ex.Message}");
                 return null;
             }
-
-     
-
         }
         public async Task<ICollection<Review>> GetReviews()
         {
@@ -129,7 +126,5 @@ namespace PokemonReviewer.Repository
         {
             return await _dataContext.SaveChangesAsync() > 0 ? true : false;
         }
-
-      
     }
 }

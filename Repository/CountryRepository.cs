@@ -120,8 +120,24 @@ namespace PokemonReviewer.Repository
         {
             try
             {
-                _dataContext.Remove(country);
-             
+                var countries = await _dataContext.Countries
+                                                        .Where(c => c.Id == country.Id).FirstOrDefaultAsync();
+                var owners = await _dataContext.Owners
+                                              .Where(o => o.Country.Id == country.Id)
+                                              .ToListAsync();
+
+                if (countries != null)
+                {
+
+                    _dataContext.RemoveRange(owners);
+                    _dataContext.Remove(countries);
+                   
+                }
+                else
+                {
+                    _logger.LogError($"Country with id: {country.Id} not found");
+                    return false;
+                }
             }
             catch (Exception ex)
             {

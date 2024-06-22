@@ -34,15 +34,14 @@ namespace PokemonReviewer.Controllers
         {
            try
             {
-                _logger.LogInformation("GetReviews was called");
                 var reviews = await _reviewRepository.GetReviews();
                 if (reviews == null)
                 {
                     _logger.LogWarning("No reviews found");
                     return NotFound();
                 }
-                _logger.LogInformation("Returning reviews");
                 var reviewsDto = _mapper.Map<List<ReviewDto>>(reviews);
+
                 return Ok(reviewsDto);
             } catch(Exception)
             {
@@ -59,20 +58,19 @@ namespace PokemonReviewer.Controllers
         public async Task<IActionResult> GetReviewById(int reviewId)
         {
             try
-            {
-                _logger.LogInformation("GetReviewById was called");
+            { 
                 var review = await _reviewRepository.GetReviewById(reviewId);
                 if (review == null)
                 {
-                    _logger.LogWarning("No review found");
+                    _logger.LogError("Review with ID {reviewId} not found", reviewId);
                     return NotFound();
                 }
-                _logger.LogInformation("Returning review");
                 var reviewDto = _mapper.Map<ReviewDto>(review);
                 return Ok(reviewDto);
-            } catch(Exception)
+
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetReviewById action");
+                _logger.LogError(ex, "An error occurred inside GetReviewsById action for reviewer ID {reviewId}", reviewId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -86,20 +84,18 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetReviewsOfAPokemon was called");
                 var reviews = await _reviewRepository.GetReviewsOfAPokemonById(pokemonId);
                 if (reviews == null)
                 {
-                    _logger.LogWarning("No reviews found");
+                    _logger.LogError("Pokemon with ID {pokemonId} not found", pokemonId);
                     return NotFound();
                 }
-                _logger.LogInformation("Returning reviews");
                 var reviewsDto = _mapper.Map<List<ReviewDto>>(reviews);
                 return Ok(reviewsDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetReviewsOfAPokemon action");
+                _logger.LogError(ex, "An error occurred inside GetReviewsOfAPokemonById action for {pokemonId}", pokemonId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -117,8 +113,10 @@ namespace PokemonReviewer.Controllers
             {
                 if (reviewCreateDto == null)
                 {
-                    return BadRequest(ModelState);
+                    _logger.LogError("Review with ID {reviewCreateDto.Id} not found", reviewCreateDto.Id);
+                    return NotFound();
                 }
+
                 if (!await _reviewerRepository.ReviewerExist(reviewerId))
                 {
                     return NotFound();
@@ -134,8 +132,8 @@ namespace PokemonReviewer.Controllers
 
                 if (await _reviewRepository.ReviewExist(reviewCreateDto.Id))
                 {
-                    ModelState.AddModelError("", "Review already exists");
-                    return StatusCode(404, "Review already exists");
+                    ModelState.AddModelError("", "Review with ID {reviewCreateDto.Id} already exists");
+                    return StatusCode(404, ModelState);
                 }
                var reviewMapper = _mapper.Map<Review>(reviewCreateDto);
 
@@ -146,9 +144,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return Ok("Review created");
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside CreateReview action");
+                _logger.LogError(ex, "An error occurred inside CreateReviewer action for reviewer {Id}", reviewCreateDto.Id);
                 return StatusCode(500, "Internal server error");
             }
 
@@ -167,13 +165,12 @@ namespace PokemonReviewer.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                
-                if(updatedReviewDto == null)
+
+                if (updatedReviewDto == null)
                 {
-                    _logger.LogWarning("Review object sent from client is null");
-                    return BadRequest(ModelState);
+                    _logger.LogError("Reviewer with ID {updatedReview.Id} not found", updatedReviewDto.Id);
+                    return NotFound();
                 }
-            
                 if (!ModelState.IsValid)
                 {
                     return BadRequest();
@@ -187,9 +184,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return NoContent();
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside UpdateReviewById action");
+                _logger.LogError(ex, "An error occurred inside UpdateReviewerById action for reviewer with Id {Id}", updatedReviewDto.Id);
                 return StatusCode(500, "Internal server error");
             }
 
@@ -220,9 +217,9 @@ namespace PokemonReviewer.Controllers
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside DeleteReviewerById action");
+                _logger.LogError(ex, "An error occurred inside DeleteReview action for review {reviewId}", reviewId);
                 return StatusCode(500, "Internal server error");
             }
 

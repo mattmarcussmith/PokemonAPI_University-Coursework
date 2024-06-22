@@ -27,7 +27,6 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to fetch pokemons: {ex.Message}");
                 return null;
             }
-
         }
         public async Task<Pokemon> GetPokemonById(int pokemonId)
         {
@@ -88,7 +87,6 @@ namespace PokemonReviewer.Repository
             try
             {
             
-
                 var pokemonOwnerEntity = await _dataContext.Owners
                                           .Where(o => o.Id == ownerId)
                                           .FirstOrDefaultAsync();
@@ -122,9 +120,6 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to add pokemon: {ex.Message}");
                 return false;
             }
-
-      
-
         } 
         public async Task<bool> UpdatePokemon( int ownerId, int categoryId, Pokemon pokemon)
         {
@@ -140,7 +135,6 @@ namespace PokemonReviewer.Repository
             }
 
             return await Save();
-
         }
         public async Task<bool> DeletePokemon(Pokemon pokemon)
         {
@@ -158,7 +152,5 @@ namespace PokemonReviewer.Repository
         {
             return await _dataContext.SaveChangesAsync() > 0 ? true : false;
         }
-
-  
     }
 }

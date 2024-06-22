@@ -70,9 +70,7 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to fetch pokemon by category id {categoryId}: {ex.Message }");
                 return null;
             }
-          
         }
-
         public async Task<bool> CreateCategory(Category category)
         {
             try

@@ -89,21 +89,7 @@ namespace PokemonReviewer.Repository
            try
             {
 
-                var existingReviewer = await _dataContext.Reviewers
-                                        .Where(r => r.Id == reviewer.Id)
-                                        .FirstOrDefaultAsync();
-        
-                if (existingReviewer != null)
-                {
-                    _logger.LogError($"Reviewer with id {reviewer.Id} not found");
-                    return false;
-                }
-                if (existingReviewer == null)
-                {
-                    _logger.LogError($"Reviewer with id {reviewer.Id} not found");
-                    return false;
-                }
-                _dataContext.Update(existingReviewer);
+                _dataContext.Update(reviewer);
 
             } catch(Exception ex)
             {
@@ -117,8 +103,15 @@ namespace PokemonReviewer.Repository
         {
             try
             {
-                
-                _dataContext.Remove(reviewer);         
+                var reviewerDelete = await _dataContext.Reviewers.Where(r => r.Id == reviewer.Id).FirstOrDefaultAsync();
+                var associatedReviewsDelete = await _dataContext.Reviews.Where(r => r.Reviewer.Id == reviewer.Id).ToListAsync();
+
+                if(reviewerDelete != null)
+                {
+                    _dataContext.RemoveRange(associatedReviewsDelete);
+                    _dataContext.Remove(reviewerDelete);
+                } 
+      
             } catch(Exception ex)
             {
                 _logger.LogError($"Failed to delete reviewer {reviewer.Id}: {ex.Message}");

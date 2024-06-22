@@ -5,7 +5,6 @@ using PokemonReviewer.Models;
 
 namespace PokemonReviewer.Repository
 {
-
     public class OwnerRepository : IOwnerRepository
     {
         public readonly DataContext _dataContext;
@@ -81,8 +80,6 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to create owner: {ex.Message}");
             }
             return await Save();
-
-
         }
         public async Task<bool> UpdateOwner(Owner owner)
         {
@@ -97,7 +94,7 @@ namespace PokemonReviewer.Repository
                     _logger.LogError($"Owner with id {owner.Id} not found");
                     return false;
                 }
-               
+
                 _dataContext.Update(existingOwner);
             }
             catch (Exception ex)
@@ -111,9 +108,7 @@ namespace PokemonReviewer.Repository
         {
             try
             {
-
-                    _dataContext.Remove(owner);
-               
+                _dataContext.Remove(owner);
             }
             catch (Exception ex)
             {

@@ -150,24 +150,15 @@ namespace PokemonReviewer.Controllers
             try
             {
                 _logger.LogInformation("CreateCountry was called");
-              
-
-                if (countryCreate == null)
-                {
-                    _logger.LogWarning("Country object sent from client is null");
-                    return BadRequest();
-                }
+             
+           
 
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for the CountryDto object");
                     return BadRequest(ModelState);
                 }
-                if (await _countryRepository.CountryExist(countryCreate.Id))
-                {
-                    ModelState.AddModelError("", "Country already exists");
-                    return StatusCode(404, ModelState);
-                }
+            
                 var countryMapper = _mapper.Map<Country>(countryCreate);
    
                 if (!await _countryRepository.CreateCountry(countryMapper))

@@ -12,7 +12,7 @@ using PokemonReviewer.Data;
 namespace PokemonReviewer.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240621090241_InitialCreate")]
+    [Migration("20240622021435_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
