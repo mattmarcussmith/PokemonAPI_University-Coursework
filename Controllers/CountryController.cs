@@ -32,7 +32,6 @@ namespace PokemonReviewer.Controllers
         {
            try
             {
-                _logger.LogInformation("GetCountries was called");
                 var countries = await _countryRepository.GetCountries();
 
                 if (countries == null)
@@ -41,13 +40,12 @@ namespace PokemonReviewer.Controllers
                     return NotFound();
                 }
 
-                _logger.LogInformation("Returning countries");
                 var countriesDto = _mapper.Map<List<CountryDto>>(countries);
                 return Ok(countriesDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetCountries action");
+                _logger.LogError(ex, "Something went wrong inside GetCountries action");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -61,7 +59,6 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetCountryById was called");
                 var country = await _countryRepository.GetCountryById(countryId);
 
                 if (country == null)
@@ -70,13 +67,12 @@ namespace PokemonReviewer.Controllers
                     return NotFound();
                 }
 
-                _logger.LogInformation("Returning country");
                 var countryDto = _mapper.Map<CountryDto>(country);
                 return Ok(countryDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetCountryById action");
+                _logger.LogError(ex, "An error occurred inside GetCountryById action for ID {countryId}", countryId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -90,7 +86,6 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetCountryByOwner was called");
                 var country = await _countryRepository.GetCountryByOwnerId(ownerId);
 
                 if (country == null)
@@ -98,14 +93,12 @@ namespace PokemonReviewer.Controllers
                     _logger.LogWarning("Country not found");
                     return NotFound();
                 }
-
-                _logger.LogInformation("Returning country");
                 var countryDto = _mapper.Map<CountryDto>(country);
                 return Ok(countryDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetCountryByOwner action");
+                _logger.LogError(ex, "An error occurred inside GetCountryByOwner action for ID {ownerId}", ownerId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -120,7 +113,7 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetOwnersByCountry was called");
+
                 var existingOwners = await _countryRepository.GetOwnersByCountryId(countryId);
 
                 if (existingOwners == null)
@@ -129,13 +122,12 @@ namespace PokemonReviewer.Controllers
                     return NotFound();
                 }
 
-                _logger.LogInformation("Returning owners");
                 var ownersDto = _mapper.Map<List<OwnerDto>>(existingOwners);
                 return Ok(ownersDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetOwnersByCountry action");
+                _logger.LogError(ex, "An error occurred inside GetOwnersByCountry action for ID {countryId}", countryId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -145,21 +137,23 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateCountry([FromBody] CountryDto countryCreate)
+        public async Task<IActionResult> CreateCountry([FromBody] CountryDto countryCreateDto)
         {
             try
             {
-                _logger.LogInformation("CreateCountry was called");
-             
-           
-
+    
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for the CountryDto object");
                     return BadRequest(ModelState);
                 }
+                if(await _countryRepository.CountryExist(countryCreateDto.Id))
+                {
+                    ModelState.AddModelError("", "Country already exists");
+                    return StatusCode(404, ModelState);
+                }
             
-                var countryMapper = _mapper.Map<Country>(countryCreate);
+                var countryMapper = _mapper.Map<Country>(countryCreateDto);
    
                 if (!await _countryRepository.CreateCountry(countryMapper))
                 {
@@ -168,9 +162,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return Ok("Country created");
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside CreateCountry action");
+                _logger.LogError(ex, "An error occurred inside CreateCountry action for {Id}", countryCreateDto.Id);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -215,9 +209,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return NoContent();
 
-            } catch (Exception)
+            } catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside UpdateCountryById action");
+                _logger.LogError(ex, "An error occurred inside UpdateCountryById action for ID {countryId}", countryId);
                 return StatusCode(500, "Internal server error");
             }
 
@@ -248,13 +242,11 @@ namespace PokemonReviewer.Controllers
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside DeleteCountryById action");
+                _logger.LogError(ex, "An error occurred inside DeleteCountry action for ID {countryId}", countryId);
                 return StatusCode(500, "Internal server error");
             }
-
-            
         }
     }
 }

@@ -43,9 +43,9 @@ namespace PokemonReviewer.Controllers
                 var reviewsDto = _mapper.Map<List<ReviewDto>>(reviews);
 
                 return Ok(reviewsDto);
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetReviews action");
+                _logger.LogError(ex, "Something went wrong inside GetReviews action");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -119,11 +119,18 @@ namespace PokemonReviewer.Controllers
 
                 if (!await _reviewerRepository.ReviewerExist(reviewerId))
                 {
+                    _logger.LogError("Reviewer with ID {reviewerId} not found", reviewerId);
                     return NotFound();
                 }
                 if (!await _pokemonRepository.PokemonExist(pokemonId))
                 {
+                    _logger.LogError("Pokemon with ID {pokemonId} not found", pokemonId);
                     return NotFound();
+                }
+                if(await _reviewRepository.ReviewExist(reviewCreateDto.Id))
+                {
+                    ModelState.AddModelError("", "Review with already exists");
+                    return StatusCode(404, ModelState);
                 }
                 if (!ModelState.IsValid)
                 {
@@ -186,7 +193,7 @@ namespace PokemonReviewer.Controllers
 
             } catch(Exception ex)
             {
-                _logger.LogError(ex, "An error occurred inside UpdateReviewerById action for reviewer with Id {Id}", updatedReviewDto.Id);
+                _logger.LogError(ex, "An error occurred inside UpdateReviewerById action for reviewer with ID {Id}", updatedReviewDto.Id);
                 return StatusCode(500, "Internal server error");
             }
 
@@ -207,8 +214,6 @@ namespace PokemonReviewer.Controllers
 
                 }
                 var reviewDelete = await _reviewRepository.GetReviewById(reviewId);
-
-           
                 if (!await _reviewRepository.DeleteReview(reviewDelete))
                 {
                     ModelState.AddModelError("", "Something went wrong while deleting the review");

@@ -42,9 +42,9 @@ namespace PokemonReviewer.Controllers
                 return Ok(reviewersDto);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetReviewers action");
+                _logger.LogError(ex, "Something went wrong inside GetReviewers action");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -132,7 +132,7 @@ namespace PokemonReviewer.Controllers
 
                 if (await _reviewerRepository.ReviewerExist(reviewerCreate.Id))
                 {
-                    ModelState.AddModelError("", "Reviewer with ID {reviewerCreate.Id} already exists");
+                    ModelState.AddModelError("", "Reviewer already exists");
                     return StatusCode(404, ModelState);
                 }
 

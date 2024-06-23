@@ -40,6 +40,7 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to fetch pokemon with id {pokemonId}: {ex.Message}");
                 return null;
             }
+
         }
         public async Task<Pokemon> GetPokemonByName(string name)
         {
@@ -141,6 +142,7 @@ namespace PokemonReviewer.Repository
             try
             {
                 _dataContext.Remove(pokemon);
+
             } catch (Exception ex)
             {
                 _logger.LogError($"Failed to delete pokemon {pokemon.Id}: {ex.Message}");

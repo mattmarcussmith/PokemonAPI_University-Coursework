@@ -32,7 +32,6 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetCategories was called");
                 var categories = await _categoryRepository.GetCategories();
 
                 if (categories == null)
@@ -45,13 +44,11 @@ namespace PokemonReviewer.Controllers
                 var categoriesDto = _mapper.Map<List<CategoryDto>>(categories);
                 return Ok(categoriesDto);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetCategories action");
+                _logger.LogError(ex, "An error occurred inside GetCategories action");
                 return StatusCode(500, "Internal server error");
             }
-
-
         }
 
         [HttpGet("{categoryId}")]
@@ -63,7 +60,6 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetCategoryById was called");
                 var existingCategory = await _categoryRepository.GetCategoryById(categoryId);
 
                 if (existingCategory == null)
@@ -71,15 +67,15 @@ namespace PokemonReviewer.Controllers
                     _logger.LogWarning("No categories found");
                     return NotFound();
                 }
-                _logger.LogInformation("Returning category");
                 var categoryDto = _mapper.Map<CategoryDto>(existingCategory);
                 return Ok(categoryDto);
             }
-            catch
+            catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetCategoryById action");
+                _logger.LogError(ex, "An error occurred inside GetCategoryById action with ID {categoryId}", categoryId);
                 return StatusCode(500, "Internal server error");
             }
+           
         }
 
         [HttpGet("{categoryId}/pokemon")]
@@ -91,7 +87,7 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetPokemonsByCategoryId was called");
+  
                 var pokemons = await _categoryRepository.GetPokemonsByCategoryId(categoryId);
 
                 if (pokemons == null)
@@ -104,12 +100,11 @@ namespace PokemonReviewer.Controllers
                 var pokemonsDto = _mapper.Map<List<PokemonDto>>(pokemons);
                 return Ok(pokemonsDto);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetPokemonsByCategoryId action");
+                _logger.LogError(ex, "An error occurred inside GetPokemonsByCategoryId action for ID {categoryId}", categoryId);
                 return StatusCode(500, "Internal server error");
             }
-
         }
 
         [HttpPost]
@@ -119,9 +114,7 @@ namespace PokemonReviewer.Controllers
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryCreate)
         {
             try
-            {
-                _logger.LogInformation("CreateCategory was called");
-              
+            {   
                 if (categoryCreate == null)
                 {
                     _logger.LogWarning("Category object sent from client is null");
@@ -148,9 +141,9 @@ namespace PokemonReviewer.Controllers
 
                 return Ok("Category created");
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                _logger.LogError("Something went wrong with creating a category");
+                _logger.LogError(ex, "An error occurred inside CreateCategory action for ID {Id}", categoryCreate.Id);
                 return StatusCode(500, "Internal Service error");
                 
             }
@@ -164,8 +157,7 @@ namespace PokemonReviewer.Controllers
         public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto updatedCategoryDto)
         {
             try
-            {
-                _logger.LogInformation("UpdateCategoryById was called");
+            { 
        
                 if(categoryId != updatedCategoryDto.Id)
                 {
@@ -176,14 +168,17 @@ namespace PokemonReviewer.Controllers
                     _logger.LogWarning("Category object sent from client is null");
                     return BadRequest();
                 }
+                if (!await _categoryRepository.CategoryExist(categoryId))
+                {
+                    ModelState.AddModelError("", "Category does not exist");
+                    return StatusCode(404, ModelState);
+                }
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for the CategoryDto object");
                     return BadRequest(ModelState);
                 }
 
-               
-                
                 var categoryMapper = _mapper.Map<Category>(updatedCategoryDto);
 
                 if (!await _categoryRepository.UpdateCategory(categoryMapper))
@@ -193,9 +188,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return NoContent();
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong with updating a category");
+                _logger.LogError(ex, "An error occurred inside UpdateCategory action for ID {Id}", updatedCategoryDto.Id);
                 return StatusCode(500, "Internal Service error");
             }
         }
@@ -224,9 +219,9 @@ namespace PokemonReviewer.Controllers
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Something went wrong with deleting a category");
+                _logger.LogError(ex, "An error occurred inside DeletePokemon action for ID {Id}", categoryId);
                 return StatusCode(500, "Internal Service error");
             }
 

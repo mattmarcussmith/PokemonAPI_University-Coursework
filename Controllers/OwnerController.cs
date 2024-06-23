@@ -32,7 +32,6 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("GetOwners was called");
                 var owners = await _ownerRepository.GetOwners();
                 if (owners == null)
                 {
@@ -42,9 +41,9 @@ namespace PokemonReviewer.Controllers
                 var ownersDto = _mapper.Map<List<OwnerDto>>(owners);
                 return Ok(ownersDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetOwners action");
+                _logger.LogError(ex, "An error occurred inside GetOwners action");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -61,15 +60,15 @@ namespace PokemonReviewer.Controllers
                var existingOwner = await _ownerRepository.GetOwnerById(ownerId);
                 if (existingOwner == null)
                 {
-                    _logger.LogWarning($"Owner with id {ownerId} not found");
+                    _logger.LogWarning($"Owner with ID {ownerId} not found", ownerId);
                     return NotFound();
                 }
                 var owner = _mapper.Map<OwnerDto>(existingOwner);
                 return Ok(owner);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetOwnerById action");
+                _logger.LogError(ex, "An error occurred inside GetOwnerById action for ID {ownerId}", ownerId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -84,15 +83,15 @@ namespace PokemonReviewer.Controllers
                 var existingPokemons = await _ownerRepository.GetPokemonsByOwnerId(ownerId);
                 if (existingPokemons == null)
                 {
-                    _logger.LogWarning($"No pokemons found for owner with id {ownerId}");
+                    _logger.LogWarning($"No pokemons found for owner with ID {ownerId}");
                     return NotFound();
                 }
                 var pokemonsDto = _mapper.Map<List<PokemonDto>>(existingPokemons);
                 return Ok(pokemonsDto);
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside GetPokemonsByOwner action");
+                _logger.LogError(ex, "An error occurred inside GetPokemonById action for ID {ownerId}", ownerId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -108,6 +107,7 @@ namespace PokemonReviewer.Controllers
                 {
                     return BadRequest();
                 }
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
@@ -127,9 +127,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return Ok("Owner created");
 
-            } catch (Exception)
+            } catch (Exception ex)
             {
-                _logger.LogError("Something went wrong inside CreateOwner action");
+                _logger.LogError(ex, "An error occurred inside CreateOwner action for ID {Id}", ownerCreateDto.Id);
                 return StatusCode(500, "Internal server error");
             }
 
@@ -144,7 +144,6 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                _logger.LogInformation("UpdateOwnerById was called");
                 if(ownerId != updatedOwnerDto.Id)
                 {
                     return BadRequest(ModelState);
@@ -154,6 +153,13 @@ namespace PokemonReviewer.Controllers
                     _logger.LogWarning("Owner object sent from client is null");
                     return NotFound();
                 }
+               
+                if(!await _ownerRepository.OwnerExist(updatedOwnerDto.Id))
+                {
+                    ModelState.AddModelError("", "Owner does not exist");
+                    return StatusCode(404, ModelState);
+                } 
+               
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for the OwnerDto object");
@@ -169,9 +175,9 @@ namespace PokemonReviewer.Controllers
                 }
                 return NoContent();
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside UpdateOwnerById action");
+                _logger.LogError(ex, "An error occurred inside UpdateOwner action for ID {Id}", updatedOwnerDto.Id);
                 return StatusCode(500, "Internal server error");
             }
 
@@ -200,9 +206,9 @@ namespace PokemonReviewer.Controllers
 
                 return NoContent();
 
-            } catch(Exception)
+            } catch(Exception ex)
             {
-                _logger.LogError("Something went wrong inside DeleteOwnerById action");
+                _logger.LogError(ex, "An error occurred inside DeleteOwner action for review {Id}", ownerId);
                 return StatusCode(500, "Internal server error");
             }
         }
