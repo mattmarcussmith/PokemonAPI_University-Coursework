@@ -7,7 +7,9 @@ using PokemonReviewer.Repository;
 
 namespace PokemonReviewer.Controllers
 {
-
+    /// <summary>
+    /// Reviewer Controller
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class ReviewerController : Controller
@@ -16,6 +18,14 @@ namespace PokemonReviewer.Controllers
         private readonly ILogger<ReviewerRepository> _logger;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// IReviewer for CRUD operations
+        /// Logger for debugging
+        /// Map ReviewerDto to review and vice versa
+        /// </summary>
+        /// <param name="reviewerRepository"></param>
+        /// <param name="logger"></param>
+        /// <param name="mapper"></param>
         public ReviewerController(IReviewerRepository reviewerRepository, ILogger<ReviewerRepository> logger, IMapper mapper)
         {
             _reviewerRepository = reviewerRepository;
@@ -23,6 +33,10 @@ namespace PokemonReviewer.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Get all reviewers
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Reviewer>))]
         [ProducesResponseType(400)]
@@ -48,7 +62,11 @@ namespace PokemonReviewer.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-
+        /// <summary>
+        /// Get reviewer by ID
+        /// </summary>
+        /// <param name="reviewerId"></param>
+        /// <returns></returns>
         [HttpGet("{reviewerId}")]
         [ProducesResponseType(200, Type = typeof(Reviewer))]
         [ProducesResponseType(400)]
@@ -76,6 +94,12 @@ namespace PokemonReviewer.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Get reviews by reviewer
+        /// </summary>
+        /// <param name="reviewerId"></param>
+        /// <returns></returns>
 
         [HttpGet("{reviewerId}/reviews")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Reviewer>))]
@@ -108,6 +132,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a reviewer
+        /// </summary>
+        /// <param name="reviewerCreate"></param>
+        /// <returns></returns>
 
         [HttpPost]
         [ProducesResponseType(204)]
@@ -156,7 +185,12 @@ namespace PokemonReviewer.Controllers
 
         }
 
-
+        /// <summary>
+        /// Update reviewer
+        /// </summary>
+        /// <param name="reviewerId"></param>
+        /// <param name="updatedReviewerDto"></param>
+        /// <returns></returns>
         [HttpPut("{reviewerId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -193,6 +227,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Delete reviewer
+        /// </summary>
+        /// <param name="reviewerId"></param>
+        /// <returns></returns>
         [HttpDelete("{reviewerId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]

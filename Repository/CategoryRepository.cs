@@ -5,17 +5,30 @@ using PokemonReviewer.Models;
 
 namespace PokemonReviewer.Repository
 {
+    /// <summary>
+    /// Category Repository
+    /// </summary>
     public class CategoryRepository : ICategoryRepository
     {
 
         private readonly DataContext _dataContext;
         private readonly ILogger<CategoryRepository> _logger;
 
+        /// <summary>
+        /// Category Repository Constructor
+        /// </summary>
+        /// <param name="dataContext"></param>
+        /// <param name="logger"></param>
         public CategoryRepository(DataContext dataContext, ILogger<CategoryRepository> logger)
         {
             _dataContext = dataContext;
             _logger = logger;
         }
+        /// <summary>
+        /// Check if category exists
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
         public async Task<bool> CategoryExist(int categoryId)
         {
             try
@@ -28,6 +41,10 @@ namespace PokemonReviewer.Repository
                 return false;
             }
         }
+        /// <summary>
+        /// Get all categories from the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<ICollection<Category>> GetCategories()
         {
             try
@@ -41,6 +58,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Get category by id from the database
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
         public async Task<Category> GetCategoryById(int categoryId)
         {
             try
@@ -55,7 +77,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
-
+        /// <summary>
+        /// Get pokemons by category id from the database
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
         public async Task<ICollection<Pokemon>> GetPokemonsByCategoryId(int categoryId)
         {
             try
@@ -71,6 +97,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Create category in the database
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
         public async Task<bool> CreateCategory(Category category)
         {
             try
@@ -85,6 +116,11 @@ namespace PokemonReviewer.Repository
             }
 
         }
+        /// <summary>
+        /// Update category in the database
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateCategory(Category category)
         {
             try
@@ -104,6 +140,11 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+        /// <summary>
+        /// Delete category from the database
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
         public async Task<bool> DeleteCategory(Category category)
         {
             try
@@ -117,6 +158,11 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+
+        /// <summary>
+        /// Save changes to the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> Save()
         {
             return await _dataContext.SaveChangesAsync() > 0 ? true : false;

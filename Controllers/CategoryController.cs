@@ -9,13 +9,27 @@ using PokemonReviewer.Repository;
 
 namespace PokemonReviewer.Controllers
 {
+    /// <summary> 
+    ///  Controller
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+
     public class CategoryController : Controller
     {
+       
         private readonly ICategoryRepository _categoryRepository;
         private readonly ILogger<CategoryController> _logger;
         private readonly IMapper _mapper;
+
+        /// <summary>
+        /// ICategroyRepository for CRUD operations
+        /// Logger for debugging
+        /// Map categoryDto to category and vice versa
+        /// </summary>
+        /// <param name="categoryRepository"></param>
+        /// <param name="logger"></param>
+        /// <param name="mapper"></param>
         public CategoryController(ICategoryRepository categoryRepository, ILogger<CategoryController> logger, IMapper mapper)
         {
 
@@ -24,6 +38,11 @@ namespace PokemonReviewer.Controllers
             _mapper = mapper;
         }
 
+
+        /// <summary>
+        /// Retrieves all categories
+        /// </summary>
+        /// <remarks>Returns a list of pokemon categories</remarks>
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Category>))]
         [ProducesResponseType(404)]
@@ -51,11 +70,18 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Retrieves a category by ID
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
         [HttpGet("{categoryId}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Category>))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
+       
         public async Task<IActionResult> GetCategoryById(int categoryId)
         {
             try
@@ -78,6 +104,11 @@ namespace PokemonReviewer.Controllers
            
         }
 
+        /// <summary>
+        /// Get pokemons by category ID
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
         [HttpGet("{categoryId}/pokemon")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
         [ProducesResponseType(400)]
@@ -107,6 +138,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a new category
+        /// </summary>
+        /// <param name="categoryCreate"></param>
+        /// <returns></returns>
         [HttpPost]
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
@@ -148,6 +184,13 @@ namespace PokemonReviewer.Controllers
                 
             }
         }
+
+        /// <summary>
+        /// Update a category
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <param name="updatedCategoryDto"></param>
+        /// <returns></returns>
 
         [HttpPut("{categoryId}")]
         [ProducesResponseType(204)]
@@ -195,6 +238,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Delete a category
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
         [HttpDelete("{categoryId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]

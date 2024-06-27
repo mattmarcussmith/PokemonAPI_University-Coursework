@@ -7,17 +7,29 @@ using PokemonReviewer.Models;
 namespace PokemonReviewer.Repository
 {
 
-
+    /// <summary>
+    /// Country Repository
+    /// </summary>
     public class CountryRepository : ICountryRepository
     {
         private readonly DataContext _dataContext;
         private readonly ILogger<CountryRepository> _logger;
 
+        /// <summary>
+        /// Country Repository Constructor
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="logger"></param>
         public CountryRepository(DataContext context, ILogger<CountryRepository> logger)
         {
             _dataContext = context;
             _logger = logger;
         }
+        /// <summary>
+        /// Check if country exists in the database
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
         public async Task<bool> CountryExist(int countryId)
         {
             try
@@ -29,6 +41,11 @@ namespace PokemonReviewer.Repository
                 return false;
             }
         }
+
+        /// <summary>
+        /// Get all countries from the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<ICollection<Country>> GetCountries()
         {
             try
@@ -42,6 +59,11 @@ namespace PokemonReviewer.Repository
                 return null;
             } 
         }
+        /// <summary>
+        /// Get country by id from the database
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
         public async Task<Country> GetCountryById(int countryId)
         {
             try
@@ -55,6 +77,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Get country by owner id
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         public async Task<Country> GetCountryByOwnerId(int ownerId)
         {
             try
@@ -69,6 +96,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Get owners by country id from the database
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
         public async Task<ICollection<Owner>> GetOwnersByCountryId(int countryId)
         {
             try
@@ -82,6 +114,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Create a new country in the database
+        /// </summary>
+        /// <param name="country"></param>
+        /// <returns></returns>
         public async Task<bool> CreateCountry(Country country)
         {
             try
@@ -96,6 +133,11 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+        /// <summary>
+        /// Update country in the database
+        /// </summary>
+        /// <param name="country"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateCountry(Country country)
         {
             try
@@ -116,6 +158,11 @@ namespace PokemonReviewer.Repository
             return await Save();
 
         }
+        /// <summary>
+        /// Delete country from the database
+        /// </summary>
+        /// <param name="country"></param>
+        /// <returns></returns>
         public async Task<bool> DeleteCountry(Country country)
         {
             try
@@ -147,6 +194,11 @@ namespace PokemonReviewer.Repository
 
             return await Save();
         }
+
+        /// <summary>
+        /// Save changes to the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> Save()
         {
             return await _dataContext.SaveChangesAsync() > 0 ? true : false;

@@ -4,14 +4,24 @@ using PokemonReviewer.Models;
 namespace PokemonReviewer
 {
 
+    /// <summary>
+    /// Seed the database with data
+    /// </summary>
 
     public class Seed
     {
         private readonly DataContext dataContext;
+        /// <summary>
+        /// Seed the database with data
+        /// </summary>
+        /// <param name="context"></param>
         public Seed(DataContext context)
         {
             this.dataContext = context;
         }
+        /// <summary>
+        /// Allows the database to be seeded with data
+        /// </summary>
         public void SeedDataContext()
         {
             if (!dataContext.PokemonOwners.Any())
@@ -80,7 +90,7 @@ namespace PokemonReviewer
                             }
                         }
                     },
-                                    new PokemonOwner()
+                   new PokemonOwner()
                     {
                         Pokemon = new Pokemon()
                         {

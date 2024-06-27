@@ -7,8 +7,11 @@ using PokemonReviewer.Repository;
 
 namespace PokemonReviewer.Controllers
 {
-        [Route("api/[controller]")]
-        [ApiController]
+    /// <summary>
+    /// Owner Controller
+    /// </summary>
+    [Route("api/[controller]")]
+    [ApiController]
     public class OwnerController : Controller
     {
         private readonly IOwnerRepository _ownerRepository;
@@ -16,7 +19,16 @@ namespace PokemonReviewer.Controllers
         private readonly IMapper _mapper;
         private readonly ILogger<OwnerRepository> _logger;
 
-        public OwnerController(IOwnerRepository ownerRepository, ICountryRepository countryRepository, IMapper mapper, ILogger<OwnerRepository> logger) 
+        /// <summary>
+        /// IOwnerRepository for CRUD operations
+        /// Logger for debugging
+        /// Map Owner to OwnerDto
+        /// </summary>
+        /// <param name="ownerRepository"></param>
+        /// <param name="countryRepository"></param>
+        /// <param name="mapper"></param>
+        /// <param name="logger"></param>
+        public OwnerController(IOwnerRepository ownerRepository, ICountryRepository countryRepository, IMapper mapper, ILogger<OwnerRepository> logger)
         {
             _ownerRepository = ownerRepository;
             _countryRepository = countryRepository;
@@ -25,6 +37,10 @@ namespace PokemonReviewer.Controllers
 
         }
 
+        /// <summary>
+        /// Get all owners
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Owner>))]
         [ProducesResponseType(400)]
@@ -41,13 +57,19 @@ namespace PokemonReviewer.Controllers
                 var ownersDto = _mapper.Map<List<OwnerDto>>(owners);
                 return Ok(ownersDto);
 
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred inside GetOwners action");
                 return StatusCode(500, "Internal server error");
             }
         }
 
+        /// <summary>
+        /// Get owner by ID
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         [HttpGet("{ownerId}")]
         [ProducesResponseType(200, Type = typeof(Owner))]
         [ProducesResponseType(400)]
@@ -55,9 +77,9 @@ namespace PokemonReviewer.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetOwnerById(int ownerId)
         {
-           try
+            try
             {
-               var existingOwner = await _ownerRepository.GetOwnerById(ownerId);
+                var existingOwner = await _ownerRepository.GetOwnerById(ownerId);
                 if (existingOwner == null)
                 {
                     _logger.LogWarning($"Owner with ID {ownerId} not found", ownerId);
@@ -66,13 +88,19 @@ namespace PokemonReviewer.Controllers
                 var owner = _mapper.Map<OwnerDto>(existingOwner);
                 return Ok(owner);
 
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred inside GetOwnerById action for ID {ownerId}", ownerId);
                 return StatusCode(500, "Internal server error");
             }
         }
 
+        /// <summary>
+        /// Get all pokemons by owner ID
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         [HttpGet("{ownerId}/pokemon")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Owner>))]
         [ProducesResponseType(400)]
@@ -89,19 +117,26 @@ namespace PokemonReviewer.Controllers
                 var pokemonsDto = _mapper.Map<List<PokemonDto>>(existingPokemons);
                 return Ok(pokemonsDto);
 
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred inside GetPokemonById action for ID {ownerId}", ownerId);
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Create owner
+        /// </summary>
+        /// <param name="ownerCreateDto"></param>
+        /// <returns></returns>
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        
+
         public async Task<IActionResult> CreateOwner([FromBody] OwnerDto ownerCreateDto)
         {
-           try
+            try
             {
                 if (ownerCreateDto == null)
                 {
@@ -127,7 +162,8 @@ namespace PokemonReviewer.Controllers
                 }
                 return Ok("Owner created");
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred inside CreateOwner action for ID {Id}", ownerCreateDto.Id);
                 return StatusCode(500, "Internal server error");
@@ -135,6 +171,12 @@ namespace PokemonReviewer.Controllers
 
         }
 
+        /// <summary>
+        /// Update owner
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <param name="updatedOwnerDto"></param>
+        /// <returns></returns>
         [HttpPut("{ownerId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -144,7 +186,7 @@ namespace PokemonReviewer.Controllers
         {
             try
             {
-                if(ownerId != updatedOwnerDto.Id)
+                if (ownerId != updatedOwnerDto.Id)
                 {
                     return BadRequest(ModelState);
                 }
@@ -153,13 +195,13 @@ namespace PokemonReviewer.Controllers
                     _logger.LogWarning("Owner object sent from client is null");
                     return NotFound();
                 }
-               
-                if(!await _ownerRepository.OwnerExist(updatedOwnerDto.Id))
+
+                if (!await _ownerRepository.OwnerExist(updatedOwnerDto.Id))
                 {
                     ModelState.AddModelError("", "Owner does not exist");
                     return StatusCode(404, ModelState);
-                } 
-               
+                }
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for the OwnerDto object");
@@ -167,7 +209,7 @@ namespace PokemonReviewer.Controllers
                 }
 
 
-               var ownerMapper = _mapper.Map<Owner>(updatedOwnerDto);
+                var ownerMapper = _mapper.Map<Owner>(updatedOwnerDto);
                 if (!await _ownerRepository.UpdateOwner(ownerMapper))
                 {
                     ModelState.AddModelError("", "Something went wrong while updating");
@@ -175,13 +217,20 @@ namespace PokemonReviewer.Controllers
                 }
                 return NoContent();
 
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred inside UpdateOwner action for ID {Id}", updatedOwnerDto.Id);
                 return StatusCode(500, "Internal server error");
             }
 
         }
+
+        /// <summary>
+        /// Delete owner
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         [HttpDelete("{ownerId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -206,7 +255,8 @@ namespace PokemonReviewer.Controllers
 
                 return NoContent();
 
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred inside DeleteOwner action for review {Id}", ownerId);
                 return StatusCode(500, "Internal server error");

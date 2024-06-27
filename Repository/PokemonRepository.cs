@@ -5,15 +5,27 @@ using PokemonReviewer.Models;
 
 namespace PokemonReviewer.Repository
 {
+    /// <summary>
+    /// Pokemon Repository
+    /// </summary>
     public class PokemonRepository : IPokemonRepository
     {
         private readonly DataContext _dataContext;
         private readonly ILogger<PokemonRepository> _logger;
+        /// <summary>
+        /// Pokemon Repository Constructor
+        /// </summary>
+        /// <param name="dataContext"></param>
+        /// <param name="logger"></param>
         public PokemonRepository(DataContext dataContext, ILogger<PokemonRepository> logger)
         {
             _dataContext = dataContext;
             _logger = logger;
         }
+        /// <summary>
+        /// Get all pokemons from the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<ICollection<Pokemon>> GetPokemons()
         {
             try
@@ -28,6 +40,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Get pokemon by id from the database
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <returns></returns>
         public async Task<Pokemon> GetPokemonById(int pokemonId)
         {
             try
@@ -42,6 +59,11 @@ namespace PokemonReviewer.Repository
             }
 
         }
+        /// <summary>
+        /// Get pokemon by name from the database
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public async Task<Pokemon> GetPokemonByName(string name)
         {
             try
@@ -56,6 +78,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Get pokemon rating from the database
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <returns></returns>
         public async Task<decimal> GetPokemonRating(int pokemonId)
         {
             try
@@ -71,6 +98,11 @@ namespace PokemonReviewer.Repository
                 return 0;
             }
         }
+        /// <summary>
+        /// Check if pokemon exists in the database
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <returns></returns>
         public async Task<bool> PokemonExist(int pokemonId)
         {
             try
@@ -83,6 +115,13 @@ namespace PokemonReviewer.Repository
                 return false;
             }
         }
+        /// <summary>
+        /// Create a pokemon in the database
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <param name="categoryId"></param>
+        /// <param name="pokemon"></param>
+        /// <returns></returns>
         public async Task<bool> CreatePokemon(int ownerId, int categoryId, Pokemon pokemon)
         {
             try
@@ -121,7 +160,14 @@ namespace PokemonReviewer.Repository
                 _logger.LogError($"Failed to add pokemon: {ex.Message}");
                 return false;
             }
-        } 
+        }
+        /// <summary>
+        /// Update pokemon in the database
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <param name="categoryId"></param>
+        /// <param name="pokemon"></param>
+        /// <returns></returns>
         public async Task<bool> UpdatePokemon( int ownerId, int categoryId, Pokemon pokemon)
         {
             try
@@ -137,6 +183,11 @@ namespace PokemonReviewer.Repository
 
             return await Save();
         }
+        /// <summary>
+        /// Delete pokemon from the database
+        /// </summary>
+        /// <param name="pokemon"></param>
+        /// <returns></returns>
         public async Task<bool> DeletePokemon(Pokemon pokemon)
         {
             try
@@ -150,6 +201,10 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+        /// <summary>
+        /// Save changes to the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> Save()
         {
             return await _dataContext.SaveChangesAsync() > 0 ? true : false;

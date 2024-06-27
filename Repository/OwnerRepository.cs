@@ -5,15 +5,31 @@ using PokemonReviewer.Models;
 
 namespace PokemonReviewer.Repository
 {
+    /// <summary>
+    /// Owner Repository
+    /// </summary>
     public class OwnerRepository : IOwnerRepository
-    {
-        public readonly DataContext _dataContext;
-        public readonly ILogger<OwnerRepository> _logger;
+    { 
+       
+        private readonly DataContext _dataContext;
+        private readonly ILogger<OwnerRepository> _logger;
+
+        /// <summary>
+        /// Owner Repository Constructor
+        /// </summary>
+        /// <param name="dataContext"></param>
+        /// <param name="logger"></param>
         public OwnerRepository(DataContext dataContext, ILogger<OwnerRepository> logger)
         {
             _dataContext = dataContext;
             _logger = logger;
         }
+
+        /// <summary>
+        /// Owner Exist in the database
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         public async Task<bool> OwnerExist(int ownerId)
         {
             try
@@ -27,6 +43,11 @@ namespace PokemonReviewer.Repository
                 return false;
             }
         }
+        /// <summary>
+        /// Get owner by id in the database
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         public async Task<Owner> GetOwnerById(int ownerId)
         {
             try
@@ -40,6 +61,10 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Get all owners from the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<ICollection<Owner>> GetOwners()
         {
             try
@@ -54,6 +79,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// GetPokemon by owner id from the database
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         public async Task<ICollection<Pokemon>> GetPokemonsByOwnerId(int ownerId)
         {
             try
@@ -68,6 +98,11 @@ namespace PokemonReviewer.Repository
                 return null;
             }
         }
+        /// <summary>
+        /// Create owner in the database
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public async Task<bool> CreateOwner(Owner owner)
         {
             try
@@ -81,6 +116,11 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+        /// <summary>
+        /// Update owner in the database
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateOwner(Owner owner)
         {
             try
@@ -104,6 +144,11 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+        /// <summary>
+        /// Delete owner from the database
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public async Task<bool> DeleteOwner(Owner owner)
         {
             try
@@ -117,6 +162,10 @@ namespace PokemonReviewer.Repository
             }
             return await Save();
         }
+        /// <summary>
+        /// Save changes in the database
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> Save()
         {
             return await _dataContext.SaveChangesAsync() > 0 ? true : false;

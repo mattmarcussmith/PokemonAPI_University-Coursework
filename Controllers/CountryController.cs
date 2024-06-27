@@ -7,6 +7,10 @@ using PokemonReviewer.Repository;
 
 namespace PokemonReviewer.Controllers
 {
+
+    /// <summary>
+    /// Country Controller
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class CountryController : Controller
@@ -15,6 +19,16 @@ namespace PokemonReviewer.Controllers
         private readonly IOwnerRepository _ownerRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<CountryController> _logger;
+
+        /// <summary>
+        /// ICountryRepository, and IOwnerRepository for CRUD operations
+        /// Logger for debugging
+        /// Map CountryDto to Country and vice versa
+        /// </summary>
+        /// <param name="countryRepository"></param>
+        /// <param name="ownerRepository"></param>
+        /// <param name="mapper"></param>
+        /// <param name="logger"></param>
         public CountryController(ICountryRepository countryRepository, IOwnerRepository ownerRepository, IMapper mapper, ILogger<CountryController> logger)
         {
             _countryRepository = countryRepository;
@@ -23,6 +37,10 @@ namespace PokemonReviewer.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Get all countries
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Country>))]
         [ProducesResponseType(400)]
@@ -49,6 +67,12 @@ namespace PokemonReviewer.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Get country by ID
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
 
         [HttpGet("{countryId}")]
         [ProducesResponseType(200, Type = typeof(Country))]
@@ -77,6 +101,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Get country by owner ID
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <returns></returns>
         [HttpGet("{ownerId}/country")]
         [ProducesResponseType(200, Type = typeof(Country))]
         [ProducesResponseType(400)]
@@ -102,6 +131,12 @@ namespace PokemonReviewer.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Get owners by country ID
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
 
         [HttpGet("{countryId}/owners")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Country>))]
@@ -132,6 +167,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a new country
+        /// </summary>
+        /// <param name="countryCreateDto"></param>
+        /// <returns></returns>
         [HttpPost]
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
@@ -169,6 +209,13 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Update country by ID
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <param name="updatedCountryDto"></param>
+        /// <returns></returns>
         [HttpPut("{countryId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -217,6 +264,11 @@ namespace PokemonReviewer.Controllers
 
         }
 
+        /// <summary>
+        /// Delete country by ID
+        /// </summary>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
         [HttpDelete("{countryId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]

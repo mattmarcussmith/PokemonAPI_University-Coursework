@@ -17,7 +17,12 @@ namespace PokemonReviewer.Controllers
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<PokemonController> _logger;
-        public PokemonController(IPokemonRepository pokemonRepository, IReviewRepository reviewRepository, IOwnerRepository ownerRepository,ICategoryRepository categoryRepository, IMapper mapper, ILogger<PokemonController> logger)
+
+        /// <summary>
+        /// IPokemonRepository, IOwnerRepository, ICategoryRepository for CRUD operations
+        /// Logger for debugging
+        /// Map pokemonDto to pokemon and vice versa
+        public PokemonController(IPokemonRepository pokemonRepository, IOwnerRepository ownerRepository,ICategoryRepository categoryRepository, IMapper mapper, ILogger<PokemonController> logger)
         {
             _pokemonRepository = pokemonRepository;
             _ownerRepository = ownerRepository;
@@ -26,11 +31,17 @@ namespace PokemonReviewer.Controllers
             _logger = logger;
         }
 
+
+        /// <summary>
+        /// Get all pokemons
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
+
         public async Task<IActionResult> GetPokemons()
         {    
            try
@@ -50,7 +61,11 @@ namespace PokemonReviewer.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-
+        /// <summary>
+        /// Get pokemon by ID
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <returns></returns>
         [HttpGet("{pokemonId}")]
         [ProducesResponseType(200, Type=typeof(Pokemon))]
         [ProducesResponseType(400)]
@@ -75,6 +90,11 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Get pokemon rating by ID
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <returns></returns>
         [HttpGet("{pokemonId}/rating")]
         [ProducesResponseType(200, Type = typeof(decimal))]
         [ProducesResponseType(400)]
@@ -99,6 +119,13 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a new pokemon
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <param name="categoryId"></param>
+        /// <param name="pokemonCreateDto"></param>
+        /// <returns></returns>
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -152,6 +179,14 @@ namespace PokemonReviewer.Controllers
             }
         }
 
+        /// <summary>
+        /// Update pokemon by ID
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <param name="ownerId"></param>
+        /// <param name="categoryId"></param>
+        /// <param name="updatedPokemonDto"></param>
+        /// <returns></returns>
         [HttpPut("{pokemonId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -206,6 +241,11 @@ namespace PokemonReviewer.Controllers
 
         }
 
+        /// <summary>
+        /// Delete pokemon by ID
+        /// </summary>
+        /// <param name="pokemonId"></param>
+        /// <returns></returns>
         [HttpDelete("{pokemonId}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
